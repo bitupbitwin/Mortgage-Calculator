@@ -1,0 +1,21 @@
+name: mortgage_calc
+description: 房贷计算器 - 支持公积金/商业贷款、提前还款模拟
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_riverpod: ^2.5.0
+  fl_chart: ^0.67.0
+  shared_preferences: ^2.2.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
