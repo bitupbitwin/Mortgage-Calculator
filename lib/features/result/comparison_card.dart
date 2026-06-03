@@ -15,10 +15,10 @@ class ComparisonCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final diff = epResult.totalInterest - eprincipalResult.totalInterest;
-    final epFirst = epResult.schedule.isNotEmpty ? epResult.schedule[0].payment : 0;
+    final epFirst = epResult.schedule.isNotEmpty ? epResult.schedule[0].payment : 0.0;
     final epriFirst = eprincipalResult.schedule.isNotEmpty
         ? eprincipalResult.schedule[0].payment
-        : 0;
+        : 0.0;
 
     return Card(
       child: Padding(
