@@ -30,7 +30,7 @@ class ComparisonCard extends StatelessWidget {
                 style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF1B3A6B))),
+                    color: Color(0xFF0C2B24))),
             const SizedBox(height: 12),
             Row(
               children: [
@@ -63,7 +63,7 @@ class ComparisonCard extends StatelessWidget {
                 Icon(
                   diff > 0 ? Icons.info_outline : Icons.check_circle_outline,
                   size: 16,
-                  color: diff > 0 ? Colors.orange : Colors.green,
+                  color: diff > 0 ? Colors.red[700] : const Color(0xFF1B7C67),
                 ),
                 const SizedBox(width: 6),
                 Text(
@@ -74,7 +74,7 @@ class ComparisonCard extends StatelessWidget {
                           : '两种方式总利息相同',
                   style: TextStyle(
                     fontSize: 13,
-                    color: diff > 0 ? Colors.orange[800] : Colors.green[800],
+                    color: diff > 0 ? Colors.red[700] : const Color(0xFF1B7C67),
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -118,11 +118,11 @@ class _Column extends StatelessWidget {
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
                       color: highlight
-                          ? Colors.green[700]
+                          ? const Color(0xFF1B7C67)
                           : const Color(0xFF333333))),
               if (highlight) ...[
                 const SizedBox(width: 4),
-                const Icon(Icons.star, size: 14, color: Colors.green),
+                const Icon(Icons.star, size: 14, color: Color(0xFF1B7C67)),
               ],
             ],
           ),

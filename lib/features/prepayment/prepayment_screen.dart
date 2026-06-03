@@ -68,7 +68,7 @@ class _HeaderBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: const Color(0xFF1B3A6B),
+      color: const Color(0xFF0C2B24),
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,

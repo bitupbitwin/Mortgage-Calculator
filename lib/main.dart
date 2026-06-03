@@ -16,15 +16,15 @@ class MortgageCalcApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF1B3A6B),
-          primary: const Color(0xFF1B3A6B),
-          secondary: const Color(0xFFC8941A),
-          surface: const Color(0xFFF4F4F4),
+          seedColor: const Color(0xFF0C2B24),
+          primary: const Color(0xFF0C2B24),
+          secondary: const Color(0xFF1B7C67),
+          surface: const Color(0xFFFFFFFF),
         ),
         useMaterial3: true,
-        scaffoldBackgroundColor: const Color(0xFFF4F4F4),
+        scaffoldBackgroundColor: const Color(0xFFEBF5F1),
         appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFF1B3A6B),
+          backgroundColor: Color(0xFF0C2B24),
           foregroundColor: Colors.white,
           elevation: 0,
         ),
@@ -46,13 +46,13 @@ class MortgageCalcApp extends StatelessWidget {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
-            borderSide: const BorderSide(color: Color(0xFF1B3A6B), width: 2),
+            borderSide: const BorderSide(color: Color(0xFF0C2B24), width: 2),
           ),
           contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF1B3A6B),
+            backgroundColor: const Color(0xFF0C2B24),
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),

@@ -19,7 +19,7 @@ class SnapshotCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: const BoxDecoration(
-              color: Color(0xFF1B3A6B),
+              color: Color(0xFF0C2B24),
               borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
             ),
             child: Row(
@@ -46,7 +46,7 @@ class SnapshotCard extends StatelessWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFC8941A),
+                    color: const Color(0xFF1B7C67),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
@@ -89,7 +89,7 @@ class SnapshotCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             decoration: const BoxDecoration(
-              color: Color(0xFFFFF8E8),
+              color: Color(0xFFE2EDE8),
               borderRadius: BorderRadius.vertical(bottom: Radius.circular(12)),
             ),
             child: Row(
@@ -100,7 +100,7 @@ class SnapshotCard extends StatelessWidget {
                       ? Icons.trending_up
                       : Icons.trending_down,
                   size: 16,
-                  color: interestDiff > 0 ? Colors.orange[700] : Colors.green[700],
+                  color: interestDiff > 0 ? Colors.red[700] : const Color(0xFF1B7C67),
                 ),
                 const SizedBox(width: 6),
                 Text(
@@ -111,8 +111,8 @@ class SnapshotCard extends StatelessWidget {
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
                     color: interestDiff > 0
-                        ? Colors.orange[800]
-                        : Colors.green[800],
+                        ? Colors.red[700]
+                        : const Color(0xFF1B7C67),
                   ),
                 ),
               ],
@@ -155,7 +155,7 @@ class _HalfPanel extends StatelessWidget {
               style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF1B3A6B))),
+                  color: Color(0xFF0C2B24))),
           const SizedBox(height: 10),
           _DataRow(label: '剩余本金', value: formatWan(balance)),
           const SizedBox(height: 6),
@@ -164,7 +164,7 @@ class _HalfPanel extends StatelessWidget {
             child: LinearProgressIndicator(
               value: progressValue,
               backgroundColor: const Color(0xFFE0E0E0),
-              color: const Color(0xFF1B3A6B),
+              color: const Color(0xFF0C2B24),
               minHeight: 8,
             ),
           ),
@@ -177,7 +177,7 @@ class _HalfPanel extends StatelessWidget {
             valueStyle: const TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFFC8941A)),
+                color: Color(0xFF1B7C67)),
           ),
         ],
       ),
