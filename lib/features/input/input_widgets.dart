@@ -122,7 +122,7 @@ class _TypeButton extends StatelessWidget {
           ),
           boxShadow: selected ? [
             BoxShadow(
-              color: const Color(0xFF0C2B24).withOpacity(0.15),
+              color: const Color(0xFF0C2B24).withValues(alpha: 0.15),
               blurRadius: 4,
               offset: const Offset(0, 2),
             ),
@@ -159,7 +159,7 @@ class PrepaymentRow extends StatelessWidget {
     final year = 2025 + (month - 1) ~/ 12;
     final m = ((month - 1) % 12) + 1;
     if (m == 12) return '${year + 1}年末';
-    return '${year}年第${m}月末';
+    return '$year年第$m月末';
   }
 
   @override

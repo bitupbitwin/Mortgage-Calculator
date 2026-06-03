@@ -35,7 +35,7 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
               Switch(
                 value: _showPrepaymentOnly,
                 onChanged: (v) => setState(() => _showPrepaymentOnly = v),
-                activeColor: const Color(0xFF1B7C67),
+                activeThumbColor: const Color(0xFF1B7C67),
               ),
             ],
           ),

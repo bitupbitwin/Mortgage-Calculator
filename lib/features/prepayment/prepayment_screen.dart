@@ -77,7 +77,7 @@ class _HeaderBanner extends StatelessWidget {
           _Item(
               label: '提前还款总额',
               value: formatWan(totalPrepayment)),
-          _Item(label: '本息双线对比', value: '等额本息 vs 等额本金'),
+          const _Item(label: '本息双线对比', value: '等额本息 vs 等额本金'),
         ],
       ),
     );

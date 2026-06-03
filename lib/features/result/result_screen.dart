@@ -124,7 +124,7 @@ class _SummaryCard extends StatelessWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF0C2B24).withOpacity(0.1),
+                    color: const Color(0xFF0C2B24).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
@@ -286,7 +286,7 @@ class _BalanceChart extends StatelessWidget {
                       belowBarData: BarAreaData(
                         show: true,
                         color:
-                            const Color(0xFF0C2B24).withOpacity(0.1),
+                            const Color(0xFF0C2B24).withValues(alpha: 0.1),
                       ),
                     ),
                   ],

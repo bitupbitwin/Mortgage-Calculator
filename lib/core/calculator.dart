@@ -116,7 +116,6 @@ List<YearSnapshot> buildSnapshots({
   final resultEPrincipal = simulate(inputEPrincipal);
 
   final snapshots = <YearSnapshot>[];
-  final startYear = DateTime.now().year;
 
   for (final month in snapshotMonths.toList()..sort()) {
     final epRecord = month <= resultEP.schedule.length
@@ -153,10 +152,8 @@ List<YearSnapshot> buildSnapshots({
       if (p.atMonth == month) prepayAmt += p.amount;
     }
 
-    // 年份基于 month
-    final year = startYear + ((month - 1) ~/ 12) + ((month % 12 == 0) ? 0 : 0);
     // 实际年份：从贷款开始年（假设2025年初），每12个月为一年末
-    final loanStartYear = 2025;
+    const loanStartYear = 2025;
     final snapshotYear = loanStartYear + (month ~/ 12);
 
     snapshots.add(YearSnapshot(

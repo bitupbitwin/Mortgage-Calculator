@@ -269,8 +269,8 @@ class _InputScreenState extends ConsumerState<InputScreen> {
         _PreviewItem(
             label: '差额',
             value: diff > 0
-                ? '+${formatWan(diff)}（${mainLabel}多）'
-                : '${formatWan(diff.abs())}（${mainLabel}少）',
+                ? '+${formatWan(diff)}（$mainLabel多）'
+                : '${formatWan(diff.abs())}（$mainLabel少）',
             valueColor: diff > 0 ? Colors.red[700] : Colors.green[700]),
         const SizedBox(height: 20),
         Row(
