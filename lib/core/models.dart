@@ -1,19 +1,24 @@
 enum RepaymentType { equalPayment, equalPrincipal }
+enum PrepaymentMode { reducePayment, shortenTerm }
 
 class LoanInput {
   final double principal;
   final double annualRate;
   final int termMonths;
   final RepaymentType type;
+  final PrepaymentMode prepaymentMode;
+  final int loanStartYear;
   final List<Prepayment> prepayments;
 
-  const LoanInput({
+  LoanInput({
     required this.principal,
     required this.annualRate,
     required this.termMonths,
     required this.type,
+    this.prepaymentMode = PrepaymentMode.reducePayment,
+    int? loanStartYear,
     this.prepayments = const [],
-  });
+  }) : loanStartYear = loanStartYear ?? DateTime.now().year;
 
   double get monthlyRate => annualRate / 12;
 
@@ -22,6 +27,8 @@ class LoanInput {
     double? annualRate,
     int? termMonths,
     RepaymentType? type,
+    PrepaymentMode? prepaymentMode,
+    int? loanStartYear,
     List<Prepayment>? prepayments,
   }) {
     return LoanInput(
@@ -29,6 +36,8 @@ class LoanInput {
       annualRate: annualRate ?? this.annualRate,
       termMonths: termMonths ?? this.termMonths,
       type: type ?? this.type,
+      prepaymentMode: prepaymentMode ?? this.prepaymentMode,
+      loanStartYear: loanStartYear ?? this.loanStartYear,
       prepayments: prepayments ?? this.prepayments,
     );
   }
@@ -94,5 +103,23 @@ class YearSnapshot {
     required this.balanceEPrincipal,
     required this.paidInterestEPrincipal,
     required this.nextPaymentEPrincipal,
+  });
+}
+
+class FlushComparisonResult {
+  final double monthlyFlushInterest;
+  final double annualFlushInterest;
+  final int monthlyFlushActualMonths;
+  final int annualFlushActualMonths;
+  final double monthlyPfAmount;
+
+  double get savedByAnnual => monthlyFlushInterest - annualFlushInterest;
+
+  const FlushComparisonResult({
+    required this.monthlyFlushInterest,
+    required this.annualFlushInterest,
+    required this.monthlyFlushActualMonths,
+    required this.annualFlushActualMonths,
+    required this.monthlyPfAmount,
   });
 }

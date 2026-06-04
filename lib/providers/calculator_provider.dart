@@ -20,7 +20,7 @@ final loanInputProvider = StateNotifierProvider<LoanInputNotifier, LoanInput>(
 
 class LoanInputNotifier extends StateNotifier<LoanInput> {
   LoanInputNotifier()
-      : super(const LoanInput(
+      : super(LoanInput(
           principal: _defaultPrincipal,
           annualRate: _defaultRate,
           termMonths: _defaultMonths,
@@ -37,11 +37,15 @@ class LoanInputNotifier extends StateNotifier<LoanInput> {
       final rate = prefs.getDouble('annualRate') ?? _defaultRate;
       final months = prefs.getInt('termMonths') ?? _defaultMonths;
       final typeIdx = prefs.getInt('repaymentType') ?? 0;
+      final modeIdx = prefs.getInt('prepaymentMode') ?? 0;
+      final startYear = prefs.getInt('loanStartYear') ?? DateTime.now().year;
       state = state.copyWith(
         principal: principal,
         annualRate: rate,
         termMonths: months,
         type: RepaymentType.values[typeIdx],
+        prepaymentMode: PrepaymentMode.values[modeIdx],
+        loanStartYear: startYear,
       );
     } catch (_) {}
   }
@@ -51,6 +55,8 @@ class LoanInputNotifier extends StateNotifier<LoanInput> {
     double? annualRate,
     int? termMonths,
     RepaymentType? type,
+    PrepaymentMode? prepaymentMode,
+    int? loanStartYear,
     List<Prepayment>? prepayments,
   }) async {
     state = state.copyWith(
@@ -58,6 +64,8 @@ class LoanInputNotifier extends StateNotifier<LoanInput> {
       annualRate: annualRate,
       termMonths: termMonths,
       type: type,
+      prepaymentMode: prepaymentMode,
+      loanStartYear: loanStartYear,
       prepayments: prepayments,
     );
     try {
@@ -66,6 +74,12 @@ class LoanInputNotifier extends StateNotifier<LoanInput> {
       if (annualRate != null) await prefs.setDouble('annualRate', annualRate);
       if (termMonths != null) await prefs.setInt('termMonths', termMonths);
       if (type != null) await prefs.setInt('repaymentType', type.index);
+      if (prepaymentMode != null) {
+        await prefs.setInt('prepaymentMode', prepaymentMode.index);
+      }
+      if (loanStartYear != null) {
+        await prefs.setInt('loanStartYear', loanStartYear);
+      }
     } catch (_) {}
   }
 
@@ -82,7 +96,7 @@ class LoanInputNotifier extends StateNotifier<LoanInput> {
   }
 
   void reset() {
-    state = const LoanInput(
+    state = LoanInput(
       principal: _defaultPrincipal,
       annualRate: _defaultRate,
       termMonths: _defaultMonths,
@@ -113,5 +127,15 @@ final snapshotsProvider = Provider<List<YearSnapshot>>((ref) {
     annualRate: input.annualRate,
     termMonths: input.termMonths,
     prepayments: input.prepayments,
+    loanStartYear: input.loanStartYear,
   );
+});
+
+// 月冲 vs 年冲比较
+final pfAmountProvider = StateProvider<double>((ref) => 2000.0);
+
+final flushComparisonProvider = Provider<FlushComparisonResult>((ref) {
+  final input = ref.watch(loanInputProvider);
+  final pfAmount = ref.watch(pfAmountProvider);
+  return compareFlushModes(input: input, monthlyPfAmount: pfAmount);
 });

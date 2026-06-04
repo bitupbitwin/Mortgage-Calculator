@@ -5,8 +5,7 @@ double _monthlyPayment(double balance, double monthlyRate, int remaining) {
   if (monthlyRate == 0) return balance / remaining;
   final r = monthlyRate;
   final n = remaining;
-  final pow = (1 + r);
-  final factor = _pow(pow, n);
+  final factor = _pow(1 + r, n);
   return balance * r * factor / (factor - 1);
 }
 
@@ -25,6 +24,15 @@ LoanResult simulate(LoanInput input) {
   double totalInterest = 0;
   double totalPaid = 0;
 
+  // Precompute fixed values for shortenTerm mode
+  final bool shortenTerm = input.prepaymentMode == PrepaymentMode.shortenTerm;
+  final double fixedPayment = shortenTerm && input.type == RepaymentType.equalPayment
+      ? _monthlyPayment(input.principal, input.monthlyRate, input.termMonths)
+      : 0;
+  final double fixedPrincipal = shortenTerm && input.type == RepaymentType.equalPrincipal
+      ? input.principal / input.termMonths
+      : 0;
+
   for (int month = 1; balance > 0.01; month++) {
     final r = input.monthlyRate;
 
@@ -33,13 +41,17 @@ LoanResult simulate(LoanInput input) {
     double payment;
 
     if (input.type == RepaymentType.equalPayment) {
-      final mp = _monthlyPayment(balance, r, remaining);
-      interest = balance * r;
+      final mp = shortenTerm
+          ? fixedPayment
+          : _monthlyPayment(balance, r, remaining);
       prinPaid = mp - interest;
       if (prinPaid > balance) prinPaid = balance;
+      if (prinPaid < 0) prinPaid = 0;
       payment = interest + prinPaid;
     } else {
-      prinPaid = balance / remaining;
+      prinPaid = shortenTerm
+          ? fixedPrincipal.clamp(0, balance)
+          : balance / remaining;
       if (prinPaid > balance) prinPaid = balance;
       payment = prinPaid + interest;
     }
@@ -82,14 +94,56 @@ LoanResult simulate(LoanInput input) {
   );
 }
 
+FlushComparisonResult compareFlushModes({
+  required LoanInput input,
+  required double monthlyPfAmount,
+}) {
+  // 月冲：正常还款，无额外提前还款（公积金仅用于支付月供）
+  final monthlyFlushInput = LoanInput(
+    principal: input.principal,
+    annualRate: input.annualRate,
+    termMonths: input.termMonths,
+    type: RepaymentType.equalPayment,
+    prepayments: const [],
+  );
+  final monthlyResult = simulate(monthlyFlushInput);
+
+  // 年冲：每12个月底提前还款 monthlyPfAmount * 12，100%冲抵本金
+  final annualAmount = monthlyPfAmount * 12;
+  final maxYears = (input.termMonths / 12).ceil();
+  final annualPrepayments = List.generate(
+    maxYears,
+    (i) => Prepayment(atMonth: (i + 1) * 12, amount: annualAmount),
+  );
+  final annualFlushInput = LoanInput(
+    principal: input.principal,
+    annualRate: input.annualRate,
+    termMonths: input.termMonths,
+    type: RepaymentType.equalPayment,
+    prepayments: annualPrepayments,
+    prepaymentMode: PrepaymentMode.shortenTerm,
+  );
+  final annualResult = simulate(annualFlushInput);
+
+  return FlushComparisonResult(
+    monthlyFlushInterest: monthlyResult.totalInterest,
+    annualFlushInterest: annualResult.totalInterest,
+    monthlyFlushActualMonths: monthlyResult.actualMonths,
+    annualFlushActualMonths: annualResult.actualMonths,
+    monthlyPfAmount: monthlyPfAmount,
+  );
+}
+
 // 计算年度快照（基于等额本息和等额本金同样的提前还款计划）
 List<YearSnapshot> buildSnapshots({
   required double principal,
   required double annualRate,
   required int termMonths,
   required List<Prepayment> prepayments,
+  int? loanStartYear,
 }) {
-  // 仅提取有提前还款的年份节点
+  final startYear = loanStartYear ?? DateTime.now().year;
+
   final snapshotMonths = <int>{};
   for (final p in prepayments) {
     snapshotMonths.add(p.atMonth);
@@ -116,7 +170,6 @@ List<YearSnapshot> buildSnapshots({
   final resultEPrincipal = simulate(inputEPrincipal);
 
   final snapshots = <YearSnapshot>[];
-  final startYear = DateTime.now().year;
 
   for (final month in snapshotMonths.toList()..sort()) {
     final epRecord = month <= resultEP.schedule.length
@@ -153,11 +206,7 @@ List<YearSnapshot> buildSnapshots({
       if (p.atMonth == month) prepayAmt += p.amount;
     }
 
-    // 年份基于 month
-    final year = startYear + ((month - 1) ~/ 12) + ((month % 12 == 0) ? 0 : 0);
-    // 实际年份：从贷款开始年（假设2025年初），每12个月为一年末
-    final loanStartYear = 2025;
-    final snapshotYear = loanStartYear + (month ~/ 12);
+    final snapshotYear = startYear + (month ~/ 12);
 
     snapshots.add(YearSnapshot(
       year: snapshotYear,

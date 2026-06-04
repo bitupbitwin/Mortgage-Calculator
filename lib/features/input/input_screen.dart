@@ -6,6 +6,7 @@ import '../../providers/calculator_provider.dart';
 import '../result/result_screen.dart';
 import '../schedule/schedule_screen.dart';
 import '../prepayment/prepayment_screen.dart';
+import '../flush/flush_screen.dart';
 import 'input_widgets.dart';
 
 class InputScreen extends ConsumerStatefulWidget {
@@ -180,6 +181,12 @@ class _InputScreenState extends ConsumerState<InputScreen> {
           onChanged: (t) =>
               ref.read(loanInputProvider.notifier).update(type: t),
         ),
+        const SizedBox(height: 14),
+        PrepaymentModeSelector(
+          value: input.prepaymentMode,
+          onChanged: (m) =>
+              ref.read(loanInputProvider.notifier).update(prepaymentMode: m),
+        ),
         const SizedBox(height: 20),
         const Divider(),
         const SizedBox(height: 8),
@@ -202,6 +209,7 @@ class _InputScreenState extends ConsumerState<InputScreen> {
         ...input.prepayments.asMap().entries.map((e) => PrepaymentRow(
               prepayment: e.value,
               index: e.key,
+              loanStartYear: input.loanStartYear,
               onDelete: () =>
                   ref.read(loanInputProvider.notifier).removePrepayment(e.key),
             )),
@@ -296,14 +304,25 @@ class _InputScreenState extends ConsumerState<InputScreen> {
             ),
           ],
         ),
+        const SizedBox(height: 8),
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            onPressed: () => Navigator.push(context,
+                MaterialPageRoute(builder: (_) => const FlushScreen())),
+            icon: const Icon(Icons.compare_arrows, size: 16),
+            label: const Text('月冲 vs 年冲'),
+          ),
+        ),
       ],
     );
   }
 
   Future<void> _showAddPrepaymentDialog() async {
+    final input = ref.read(loanInputProvider);
     final result = await showDialog<Prepayment>(
       context: context,
-      builder: (_) => const AddPrepaymentDialog(),
+      builder: (_) => AddPrepaymentDialog(loanStartYear: input.loanStartYear),
     );
     if (result != null) {
       ref.read(loanInputProvider.notifier).addPrepayment(result);
