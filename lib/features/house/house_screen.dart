@@ -176,7 +176,7 @@ class _HouseScreenState extends ConsumerState<HouseScreen> {
 
   // ── 1. House info ──────────────────────────────────────────────────
 
-  Widget _buildHouseSection(input) {
+  Widget _buildHouseSection(HouseInput input) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -237,7 +237,7 @@ class _HouseScreenState extends ConsumerState<HouseScreen> {
     );
   }
 
-  Widget _buildCostRow(input) {
+  Widget _buildCostRow(HouseInput input) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
@@ -263,7 +263,7 @@ class _HouseScreenState extends ConsumerState<HouseScreen> {
 
   // ── 2. Down payment & loan amount ─────────────────────────────────
 
-  Widget _buildFundingSection(input) {
+  Widget _buildFundingSection(HouseInput input) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -307,7 +307,7 @@ class _HouseScreenState extends ConsumerState<HouseScreen> {
 
   // ── 3. Combined loan config ────────────────────────────────────────
 
-  Widget _buildCombinedLoanSection(input) {
+  Widget _buildCombinedLoanSection(HouseInput input) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -489,7 +489,7 @@ class _HouseScreenState extends ConsumerState<HouseScreen> {
 
   // ── 4. Repayment type ──────────────────────────────────────────────
 
-  Widget _buildRepaymentSection(input) {
+  Widget _buildRepaymentSection(HouseInput input) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -511,7 +511,7 @@ class _HouseScreenState extends ConsumerState<HouseScreen> {
 
   // ── 5. Live preview ────────────────────────────────────────────────
 
-  Widget _buildPreviewCard(input) {
+  Widget _buildPreviewCard(HouseInput input) {
     if (!input.hasAnyLoan) return const SizedBox.shrink();
     final result = ref.watch(combinedResultProvider);
     return Card(

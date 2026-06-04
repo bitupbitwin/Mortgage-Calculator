@@ -260,19 +260,22 @@ class _GrandTotalCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final grandTotal = input.downPayment + input.extraCost + result.totalPaid;
+    // grandTotal = housePrice + extraCost + totalInterest
+    // = downPayment + totalPaid (两种等价写法，费用不重复计入)
+    final grandTotal = input.housePrice + input.extraCost + result.totalInterest;
 
     return _ResultCard(
       title: '最终总支出',
       children: [
-        _Row(label: '首付', value: formatWan(input.downPayment)),
+        _Row(label: '房屋总价', value: formatWan(input.housePrice)),
         _Row(
-          label: '中介费 + 契税',
+          label: '附加费（中介费 + 契税）',
           value: formatWan(input.extraCost),
         ),
         _Row(
-          label: '还贷总额（本 + 息）',
-          value: formatWan(result.totalPaid),
+          label: '贷款利息',
+          value: formatWan(result.totalInterest),
+          valueColor: Colors.orange[700],
         ),
         const _HDivider(),
         Container(
