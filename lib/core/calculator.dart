@@ -49,9 +49,7 @@ LoanResult simulate(LoanInput input) {
       if (prinPaid < 0) prinPaid = 0;
       payment = interest + prinPaid;
     } else {
-      prinPaid = shortenTerm
-          ? fixedPrincipal.clamp(0, balance)
-          : balance / remaining;
+      prinPaid = shortenTerm ? fixedPrincipal : balance / remaining;
       if (prinPaid > balance) prinPaid = balance;
       payment = prinPaid + interest;
     }

@@ -12,7 +12,7 @@ const prepayments = [
   Prepayment(atMonth: 60, amount: 300000),
 ];
 
-LoanInput _epInput() => const LoanInput(
+LoanInput _epInput() => LoanInput(
       principal: 2000000,
       annualRate: 0.0305,
       termMonths: 360,
@@ -20,7 +20,7 @@ LoanInput _epInput() => const LoanInput(
       prepayments: prepayments,
     );
 
-LoanInput _epriInput() => const LoanInput(
+LoanInput _epriInput() => LoanInput(
       principal: 2000000,
       annualRate: 0.0305,
       termMonths: 360,
@@ -67,7 +67,7 @@ void main() {
 
   group('边界条件', () {
     test('零利率', () {
-      final input = const LoanInput(
+      final input = LoanInput(
         principal: 1200000,
         annualRate: 0,
         termMonths: 120,
@@ -79,7 +79,7 @@ void main() {
     });
 
     test('单月期限', () {
-      final input = const LoanInput(
+      final input = LoanInput(
         principal: 100000,
         annualRate: 0.06,
         termMonths: 1,
@@ -91,12 +91,12 @@ void main() {
     });
 
     test('提前还款超过余额不产生负余额', () {
-      final input = const LoanInput(
+      final input = LoanInput(
         principal: 500000,
         annualRate: 0.0305,
         termMonths: 360,
         type: RepaymentType.equalPayment,
-        prepayments: [Prepayment(atMonth: 12, amount: 3000000)],
+        prepayments: const [Prepayment(atMonth: 12, amount: 3000000)],
       );
       final result = simulate(input);
       for (final r in result.schedule) {
@@ -106,7 +106,7 @@ void main() {
     });
 
     test('大额本金不溢出', () {
-      final input = const LoanInput(
+      final input = LoanInput(
         principal: 100000000,
         annualRate: 0.0305,
         termMonths: 360,
@@ -120,12 +120,12 @@ void main() {
 
   group('等额本金提前还款', () {
     test('提前还款后余额减少，剩余月数不变', () {
-      final input = const LoanInput(
+      final input = LoanInput(
         principal: 2000000,
         annualRate: 0.0305,
         termMonths: 360,
         type: RepaymentType.equalPrincipal,
-        prepayments: [Prepayment(atMonth: 12, amount: 300000)],
+        prepayments: const [Prepayment(atMonth: 12, amount: 300000)],
       );
       final result = simulate(input);
       // month 12 有提前还款
@@ -136,6 +136,68 @@ void main() {
         final rec13 = result.schedule[12];
         expect(rec13.balance, lessThan(rec12.balance));
       }
+    });
+  });
+
+  group('缩短期限模式', () {
+    test('等额本息缩短期限：提前还款后实际月数 < 总期限', () {
+      final input = _epInput().copyWith(
+        prepaymentMode: PrepaymentMode.shortenTerm,
+      );
+      final result = simulate(input);
+      expect(result.actualMonths, lessThan(360));
+    });
+
+    test('等额本息缩短期限月供保持不变（提前还款前后）', () {
+      final input = _epInput().copyWith(
+        prepaymentMode: PrepaymentMode.shortenTerm,
+      );
+      final result = simulate(input);
+      final firstPayment = result.schedule.first.payment;
+      // 第一次提前还款（第24月）之前，月供应保持首月水平
+      expect(result.schedule[20].payment, closeTo(firstPayment, 1));
+    });
+
+    test('缩短期限比减少月供更省利息（相同提前还款）', () {
+      final shorten = simulate(_epInput().copyWith(
+        prepaymentMode: PrepaymentMode.shortenTerm,
+      ));
+      final reduce = simulate(_epInput().copyWith(
+        prepaymentMode: PrepaymentMode.reducePayment,
+      ));
+      expect(shorten.totalInterest, lessThan(reduce.totalInterest));
+      expect(shorten.actualMonths, lessThan(reduce.actualMonths));
+    });
+
+    test('无提前还款时缩短期限与减少月供结果一致', () {
+      final shorten = simulate(_epInput().copyWith(
+        prepayments: [],
+        prepaymentMode: PrepaymentMode.shortenTerm,
+      ));
+      final reduce = simulate(_epInput().copyWith(
+        prepayments: [],
+        prepaymentMode: PrepaymentMode.reducePayment,
+      ));
+      expect(shorten.totalInterest, closeTo(reduce.totalInterest, 1));
+      expect(shorten.actualMonths, reduce.actualMonths);
+    });
+  });
+
+  group('月冲 vs 年冲', () {
+    test('年冲总利息 < 月冲总利息，且更早还清', () {
+      final input = _epInput().copyWith(prepayments: []);
+      final result = compareFlushModes(input: input, monthlyPfAmount: 2000);
+      expect(result.annualFlushInterest, lessThan(result.monthlyFlushInterest));
+      expect(result.annualFlushActualMonths,
+          lessThan(result.monthlyFlushActualMonths));
+      expect(result.savedByAnnual, greaterThan(0));
+    });
+
+    test('公积金额度越大，年冲节省越多', () {
+      final input = _epInput().copyWith(prepayments: []);
+      final small = compareFlushModes(input: input, monthlyPfAmount: 1000);
+      final big = compareFlushModes(input: input, monthlyPfAmount: 3000);
+      expect(big.savedByAnnual, greaterThan(small.savedByAnnual));
     });
   });
 }
