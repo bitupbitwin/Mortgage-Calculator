@@ -1,20 +1,11 @@
 import 'dart:math';
 import 'models.dart';
+import 'house_models.dart';
 
 double _monthlyPayment(double balance, double monthlyRate, int remaining) {
   if (monthlyRate == 0) return balance / remaining;
-  final r = monthlyRate;
-  final n = remaining;
-  final factor = _pow(1 + r, n);
-  return balance * r * factor / (factor - 1);
-}
-
-double _pow(double base, int exp) {
-  double result = 1.0;
-  for (int i = 0; i < exp; i++) {
-    result *= base;
-  }
-  return result;
+  final factor = pow(1 + monthlyRate, remaining).toDouble();
+  return balance * monthlyRate * factor / (factor - 1);
 }
 
 LoanResult simulate(LoanInput input) {
@@ -24,26 +15,25 @@ LoanResult simulate(LoanInput input) {
   double totalInterest = 0;
   double totalPaid = 0;
 
-  // Precompute fixed values for shortenTerm mode
   final bool shortenTerm = input.prepaymentMode == PrepaymentMode.shortenTerm;
-  final double fixedPayment = shortenTerm && input.type == RepaymentType.equalPayment
-      ? _monthlyPayment(input.principal, input.monthlyRate, input.termMonths)
-      : 0;
-  final double fixedPrincipal = shortenTerm && input.type == RepaymentType.equalPrincipal
-      ? input.principal / input.termMonths
-      : 0;
+  final double fixedPayment =
+      shortenTerm && input.type == RepaymentType.equalPayment
+          ? _monthlyPayment(input.principal, input.monthlyRate, input.termMonths)
+          : 0;
+  final double fixedPrincipal =
+      shortenTerm && input.type == RepaymentType.equalPrincipal
+          ? input.principal / input.termMonths
+          : 0;
 
   for (int month = 1; balance > 0.01; month++) {
     final r = input.monthlyRate;
-
-    double interest = balance * r;
+    final double interest = balance * r;
     double prinPaid;
     double payment;
 
     if (input.type == RepaymentType.equalPayment) {
-      final mp = shortenTerm
-          ? fixedPayment
-          : _monthlyPayment(balance, r, remaining);
+      final mp =
+          shortenTerm ? fixedPayment : _monthlyPayment(balance, r, remaining);
       prinPaid = mp - interest;
       if (prinPaid > balance) prinPaid = balance;
       if (prinPaid < 0) prinPaid = 0;
@@ -58,12 +48,9 @@ LoanResult simulate(LoanInput input) {
     remaining -= 1;
     if (balance < 0.01) balance = 0;
 
-    // 月末执行提前还款
     double prepay = 0;
     for (final p in input.prepayments) {
-      if (p.atMonth == month) {
-        prepay += p.amount;
-      }
+      if (p.atMonth == month) prepay += p.amount;
     }
     prepay = min(prepay, balance);
     balance -= prepay;
@@ -96,17 +83,17 @@ FlushComparisonResult compareFlushModes({
   required LoanInput input,
   required double monthlyPfAmount,
 }) {
-  // 月冲：正常还款，无额外提前还款（公积金仅用于支付月供）
+  // 月冲：按用户选定还款方式正常摊销，无额外提前还款
   final monthlyFlushInput = LoanInput(
     principal: input.principal,
     annualRate: input.annualRate,
     termMonths: input.termMonths,
-    type: RepaymentType.equalPayment,
+    type: input.type,
     prepayments: const [],
   );
   final monthlyResult = simulate(monthlyFlushInput);
 
-  // 年冲：每12个月底提前还款 monthlyPfAmount * 12，100%冲抵本金
+  // 年冲：每12个月底将积攒的公积金一次性提前还款，100% 冲抵本金
   final annualAmount = monthlyPfAmount * 12;
   final maxYears = (input.termMonths / 12).ceil();
   final annualPrepayments = List.generate(
@@ -117,7 +104,7 @@ FlushComparisonResult compareFlushModes({
     principal: input.principal,
     annualRate: input.annualRate,
     termMonths: input.termMonths,
-    type: RepaymentType.equalPayment,
+    type: input.type,
     prepayments: annualPrepayments,
     prepaymentMode: PrepaymentMode.shortenTerm,
   );
@@ -132,13 +119,13 @@ FlushComparisonResult compareFlushModes({
   );
 }
 
-// 计算年度快照（基于等额本息和等额本金同样的提前还款计划）
 List<YearSnapshot> buildSnapshots({
   required double principal,
   required double annualRate,
   required int termMonths,
   required List<Prepayment> prepayments,
   int? loanStartYear,
+  PrepaymentMode prepaymentMode = PrepaymentMode.reducePayment,
 }) {
   final startYear = loanStartYear ?? DateTime.now().year;
 
@@ -146,7 +133,6 @@ List<YearSnapshot> buildSnapshots({
   for (final p in prepayments) {
     snapshotMonths.add(p.atMonth);
   }
-
   if (snapshotMonths.isEmpty) return [];
 
   final inputEP = LoanInput(
@@ -154,6 +140,7 @@ List<YearSnapshot> buildSnapshots({
     annualRate: annualRate,
     termMonths: termMonths,
     type: RepaymentType.equalPayment,
+    prepaymentMode: prepaymentMode,
     prepayments: prepayments,
   );
   final inputEPrincipal = LoanInput(
@@ -161,6 +148,7 @@ List<YearSnapshot> buildSnapshots({
     annualRate: annualRate,
     termMonths: termMonths,
     type: RepaymentType.equalPrincipal,
+    prepaymentMode: prepaymentMode,
     prepayments: prepayments,
   );
 
@@ -182,34 +170,25 @@ List<YearSnapshot> buildSnapshots({
     double paidInterestEP = 0;
     double paidInterestEPri = 0;
     for (int i = 0; i < month; i++) {
-      if (i < resultEP.schedule.length) {
-        paidInterestEP += resultEP.schedule[i].interest;
-      }
-      if (i < resultEPrincipal.schedule.length) {
-        paidInterestEPri += resultEPrincipal.schedule[i].interest;
-      }
+      if (i < resultEP.schedule.length) paidInterestEP += resultEP.schedule[i].interest;
+      if (i < resultEPrincipal.schedule.length) paidInterestEPri += resultEPrincipal.schedule[i].interest;
     }
 
     double nextPaymentEP = 0;
     double nextPaymentEPri = 0;
-    if (month < resultEP.schedule.length) {
-      nextPaymentEP = resultEP.schedule[month].payment;
-    }
-    if (month < resultEPrincipal.schedule.length) {
-      nextPaymentEPri = resultEPrincipal.schedule[month].payment;
-    }
+    if (month < resultEP.schedule.length) nextPaymentEP = resultEP.schedule[month].payment;
+    if (month < resultEPrincipal.schedule.length) nextPaymentEPri = resultEPrincipal.schedule[month].payment;
 
     double prepayAmt = 0;
     for (final p in prepayments) {
       if (p.atMonth == month) prepayAmt += p.amount;
     }
 
-    final snapshotYear = startYear + (month ~/ 12);
-
     snapshots.add(YearSnapshot(
-      year: snapshotYear,
+      year: startYear + (month ~/ 12),
       atMonth: month,
       prepaymentAmount: prepayAmt,
+      originalPrincipal: principal,
       balanceEP: epRecord.balance,
       paidInterestEP: paidInterestEP,
       nextPaymentEP: nextPaymentEP,
@@ -220,4 +199,36 @@ List<YearSnapshot> buildSnapshots({
   }
 
   return snapshots;
+}
+
+CombinedLoanResult simulateCombined(HouseInput input) {
+  LoanResult? pfResult;
+  LoanResult? commercialResult;
+
+  if (input.hasPfLoan) {
+    pfResult = simulate(LoanInput(
+      principal: input.effectivePfLoan,
+      annualRate: input.pfAnnualRate,
+      termMonths: input.pfTermMonths,
+      type: input.repaymentType,
+      prepaymentMode: input.prepaymentMode,
+      loanStartYear: input.loanStartYear,
+    ));
+  }
+
+  if (input.hasCommercialLoan) {
+    commercialResult = simulate(LoanInput(
+      principal: input.commercialLoanAmount,
+      annualRate: input.commercialAnnualRate,
+      termMonths: input.commercialTermMonths,
+      type: input.repaymentType,
+      prepaymentMode: input.prepaymentMode,
+      loanStartYear: input.loanStartYear,
+    ));
+  }
+
+  return CombinedLoanResult(
+    pfResult: pfResult,
+    commercialResult: commercialResult,
+  );
 }

@@ -7,6 +7,7 @@ import '../result/result_screen.dart';
 import '../schedule/schedule_screen.dart';
 import '../prepayment/prepayment_screen.dart';
 import '../flush/flush_screen.dart';
+import '../house/house_screen.dart';
 import 'input_widgets.dart';
 
 class InputScreen extends ConsumerStatefulWidget {
@@ -65,6 +66,13 @@ class _InputScreenState extends ConsumerState<InputScreen> {
         title: const Text('房贷计算器',
             style: TextStyle(fontWeight: FontWeight.bold)),
         actions: [
+          TextButton.icon(
+            onPressed: () => Navigator.push(
+                context, MaterialPageRoute(builder: (_) => const HouseScreen())),
+            icon: const Icon(Icons.home_work, color: Colors.white, size: 18),
+            label: const Text('购房计算',
+                style: TextStyle(color: Colors.white, fontSize: 13)),
+          ),
           IconButton(
             icon: const Icon(Icons.refresh),
             tooltip: '重置默认值',

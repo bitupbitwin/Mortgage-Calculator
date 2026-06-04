@@ -86,6 +86,7 @@ class YearSnapshot {
   final int year;
   final int atMonth;
   final double prepaymentAmount;
+  final double originalPrincipal;
   final double balanceEP;
   final double paidInterestEP;
   final double nextPaymentEP;
@@ -97,6 +98,7 @@ class YearSnapshot {
     required this.year,
     required this.atMonth,
     required this.prepaymentAmount,
+    required this.originalPrincipal,
     required this.balanceEP,
     required this.paidInterestEP,
     required this.nextPaymentEP,

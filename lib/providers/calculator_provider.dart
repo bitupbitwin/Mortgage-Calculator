@@ -128,6 +128,7 @@ final snapshotsProvider = Provider<List<YearSnapshot>>((ref) {
     termMonths: input.termMonths,
     prepayments: input.prepayments,
     loanStartYear: input.loanStartYear,
+    prepaymentMode: input.prepaymentMode,
   );
 });
 
