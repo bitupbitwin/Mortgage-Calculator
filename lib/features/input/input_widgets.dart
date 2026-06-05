@@ -197,7 +197,7 @@ class PrepaymentRow extends StatelessWidget {
   String _monthLabel(int month) {
     final year = loanStartYear + (month - 1) ~/ 12;
     final m = ((month - 1) % 12) + 1;
-    if (m == 12) return '${year + 1}年末';
+    if (m == 12) return '${year}年末';
     return '${year}年第${m}月末';
   }
 

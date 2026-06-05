@@ -185,7 +185,7 @@ List<YearSnapshot> buildSnapshots({
     }
 
     snapshots.add(YearSnapshot(
-      year: startYear + (month ~/ 12),
+      year: startYear + (month - 1) ~/ 12,
       atMonth: month,
       prepaymentAmount: prepayAmt,
       originalPrincipal: principal,
