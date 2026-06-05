@@ -116,7 +116,7 @@ class _SummaryCard extends StatelessWidget {
                       style: const TextStyle(
                           fontSize: 32,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF1B3A6B)),
+                          color: Color(0xFF0C2B24)),
                     ),
                   ],
                 ),
@@ -124,13 +124,13 @@ class _SummaryCard extends StatelessWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF1B3A6B).withOpacity(0.1),
+                    color: const Color(0xFF0C2B24).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
                     input.type == RepaymentType.equalPayment ? '等额本息' : '等额本金',
                     style: const TextStyle(
-                        color: Color(0xFF1B3A6B),
+                        color: Color(0xFF0C2B24),
                         fontWeight: FontWeight.w600,
                         fontSize: 13),
                   ),
@@ -150,7 +150,7 @@ class _SummaryCard extends StatelessWidget {
                     child: _StatItem(
                         label: '总利息',
                         value: formatWan(result.totalInterest),
-                        color: Colors.orange[700])),
+                        color: const Color(0xFF1B7C67))),
                 Expanded(
                     child: _StatItem(
                         label: '还款总额',
@@ -231,7 +231,7 @@ class _BalanceChart extends StatelessWidget {
                 style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF1B3A6B))),
+                    color: Color(0xFF0C2B24))),
             const SizedBox(height: 16),
             SizedBox(
               height: 200,
@@ -280,13 +280,13 @@ class _BalanceChart extends StatelessWidget {
                     LineChartBarData(
                       spots: spots,
                       isCurved: true,
-                      color: const Color(0xFF1B3A6B),
+                      color: const Color(0xFF0C2B24),
                       barWidth: 2.5,
                       dotData: const FlDotData(show: false),
                       belowBarData: BarAreaData(
                         show: true,
                         color:
-                            const Color(0xFF1B3A6B).withOpacity(0.1),
+                            const Color(0xFF0C2B24).withValues(alpha: 0.1),
                       ),
                     ),
                   ],
@@ -322,7 +322,7 @@ class _InterestPieChart extends StatelessWidget {
                 style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF1B3A6B))),
+                    color: Color(0xFF0C2B24))),
             const SizedBox(height: 16),
             Row(
               children: [
@@ -334,7 +334,7 @@ class _InterestPieChart extends StatelessWidget {
                       sections: [
                         PieChartSectionData(
                           value: principal,
-                          color: const Color(0xFF1B3A6B),
+                          color: const Color(0xFF0C2B24),
                           title: '本金\n${formatWan(principal)}',
                           radius: 70,
                           titleStyle: const TextStyle(
@@ -344,7 +344,7 @@ class _InterestPieChart extends StatelessWidget {
                         ),
                         PieChartSectionData(
                           value: interest,
-                          color: const Color(0xFFC8941A),
+                          color: const Color(0xFF1B7C67),
                           title: '利息\n${formatWan(interest)}',
                           radius: 70,
                           titleStyle: const TextStyle(
@@ -364,13 +364,13 @@ class _InterestPieChart extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _Legend(
-                          color: const Color(0xFF1B3A6B),
+                          color: const Color(0xFF0C2B24),
                           label: '本金',
                           value: formatWan(principal),
                           pct: '${(principal / total * 100).toStringAsFixed(1)}%'),
                       const SizedBox(height: 12),
                       _Legend(
-                          color: const Color(0xFFC8941A),
+                          color: const Color(0xFF1B7C67),
                           label: '利息',
                           value: formatWan(interest),
                           pct: '${(interest / total * 100).toStringAsFixed(1)}%'),

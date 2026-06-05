@@ -184,6 +184,7 @@ List<YearSnapshot> buildSnapshots({
       if (p.atMonth == month) prepayAmt += p.amount;
     }
 
+
     snapshots.add(YearSnapshot(
       year: startYear + (month - 1) ~/ 12,
       atMonth: month,

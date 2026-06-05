@@ -68,7 +68,7 @@ class _HeaderBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: const Color(0xFF1B3A6B),
+      color: const Color(0xFF0C2B24),
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -77,7 +77,7 @@ class _HeaderBanner extends StatelessWidget {
           _Item(
               label: '提前还款总额',
               value: formatWan(totalPrepayment)),
-          _Item(label: '本息双线对比', value: '等额本息 vs 等额本金'),
+          const _Item(label: '本息双线对比', value: '等额本息 vs 等额本金'),
         ],
       ),
     );

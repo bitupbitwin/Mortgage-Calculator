@@ -34,7 +34,7 @@ class LoanParamField extends StatelessWidget {
             style: const TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: Color(0xFF1B3A6B))),
+                color: Color(0xFF0C2B24))),
         const SizedBox(height: 6),
         TextFormField(
           controller: controller,
@@ -72,7 +72,7 @@ class RepaymentTypeSelector extends StatelessWidget {
             style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: Color(0xFF1B3A6B))),
+                color: Color(0xFF0C2B24))),
         const SizedBox(height: 6),
         Row(
           children: [
@@ -159,11 +159,19 @@ class _ToggleButton extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: selected ? const Color(0xFF1B3A6B) : Colors.white,
+          color: selected ? const Color(0xFF0C2B24) : Colors.white,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: selected ? const Color(0xFF1B3A6B) : const Color(0xFFDDDDDD),
+            color: selected ? const Color(0xFF071B17) : const Color(0xFFDDDDDD),
+            width: selected ? 1.5 : 1.0,
           ),
+          boxShadow: selected ? [
+            BoxShadow(
+              color: const Color(0xFF0C2B24).withValues(alpha: 0.15),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ] : null,
         ),
         child: Center(
           child: Text(
@@ -207,13 +215,13 @@ class PrepaymentRow extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: const Color(0xFFF0F4FF),
+        color: const Color(0xFFE2EDE8),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFFCCD5EE)),
+        border: Border.all(color: const Color(0xFFCAD8D3)),
       ),
       child: Row(
         children: [
-          const Icon(Icons.calendar_today, size: 16, color: Color(0xFF1B3A6B)),
+          const Icon(Icons.calendar_today, size: 16, color: Color(0xFF0C2B24)),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
@@ -225,8 +233,8 @@ class PrepaymentRow extends StatelessWidget {
             formatWan(prepayment.amount),
             style: const TextStyle(
                 fontSize: 14,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFFC8941A)),
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF1B7C67)),
           ),
           const SizedBox(width: 8),
           GestureDetector(
@@ -275,7 +283,7 @@ class _AddPrepaymentDialogState extends State<AddPrepaymentDialog> {
     final years = List.generate(30, (i) => widget.loanStartYear + 1 + i);
     return AlertDialog(
       title: const Text('添加提前还款节点',
-          style: TextStyle(color: Color(0xFF1B3A6B), fontWeight: FontWeight.bold)),
+          style: TextStyle(color: Color(0xFF0C2B24), fontWeight: FontWeight.bold)),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [

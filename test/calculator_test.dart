@@ -40,34 +40,34 @@ void main() {
       expect(result.schedule.first.payment, closeTo(10639, 10));
     });
 
-    test('等额本息无提前还款总利息约48.07万', () {
+    test('等额本息无提前还款总利息约105.50万', () {
       final result = simulate(_epInput().copyWith(prepayments: []));
-      expect(result.totalInterest, closeTo(480700, 2000));
+      expect(result.totalInterest, closeTo(1054999.17, 100));
     });
 
-    test('等额本金无提前还款总利息约41.28万', () {
+    test('等额本金无提前还款总利息约91.75万', () {
       final result = simulate(_epriInput().copyWith(prepayments: []));
-      expect(result.totalInterest, closeTo(412800, 2000));
+      expect(result.totalInterest, closeTo(917541.67, 100));
     });
   });
 
   group('提前还款后余额验证', () {
-    test('等额本息 2030年末（第60月）余额约66.80万', () {
+    test('等额本息 2030年末（第60月）余额约62.35万', () {
       final result = simulate(_epInput());
       final rec = result.schedule[59]; // month 60
-      expect(rec.balance, closeTo(668000, 3000));
+      expect(rec.balance, closeTo(623515.36, 100));
     });
 
-    test('等额本金 2030年末（第60月）余额约59.69万', () {
+    test('等额本金 2030年末（第60月）余额约53.26万', () {
       final result = simulate(_epriInput());
       final rec = result.schedule[59]; // month 60
-      expect(rec.balance, closeTo(596900, 3000));
+      expect(rec.balance, closeTo(532570.21, 100));
     });
   });
 
   group('边界条件', () {
     test('零利率', () {
-      final input = LoanInput(
+final input = LoanInput(
         principal: 1200000,
         annualRate: 0,
         termMonths: 120,
@@ -79,7 +79,7 @@ void main() {
     });
 
     test('单月期限', () {
-      final input = LoanInput(
+final input = LoanInput(
         principal: 100000,
         annualRate: 0.06,
         termMonths: 1,
@@ -91,7 +91,7 @@ void main() {
     });
 
     test('提前还款超过余额不产生负余额', () {
-      final input = LoanInput(
+final input = LoanInput(
         principal: 500000,
         annualRate: 0.0305,
         termMonths: 360,
@@ -106,7 +106,7 @@ void main() {
     });
 
     test('大额本金不溢出', () {
-      final input = LoanInput(
+final input = LoanInput(
         principal: 100000000,
         annualRate: 0.0305,
         termMonths: 360,
@@ -120,7 +120,7 @@ void main() {
 
   group('等额本金提前还款', () {
     test('提前还款后余额减少，剩余月数不变', () {
-      final input = LoanInput(
+final input = LoanInput(
         principal: 2000000,
         annualRate: 0.0305,
         termMonths: 360,

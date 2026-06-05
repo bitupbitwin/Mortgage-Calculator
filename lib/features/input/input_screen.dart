@@ -141,7 +141,7 @@ class _InputScreenState extends ConsumerState<InputScreen> {
             style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF1B3A6B))),
+                color: Color(0xFF0C2B24))),
         const SizedBox(height: 16),
         LoanParamField(
           label: '贷款金额',
@@ -205,7 +205,7 @@ class _InputScreenState extends ConsumerState<InputScreen> {
                 style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF1B3A6B))),
+                    color: Color(0xFF0C2B24))),
             TextButton.icon(
               onPressed: _showAddPrepaymentDialog,
               icon: const Icon(Icons.add, size: 18),
@@ -263,7 +263,7 @@ class _InputScreenState extends ConsumerState<InputScreen> {
             style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF1B3A6B))),
+                color: Color(0xFF0C2B24))),
         const SizedBox(height: 16),
         _PreviewItem(label: '首月月供', value: formatMonthly(firstPayment)),
         _PreviewItem(
@@ -285,8 +285,8 @@ class _InputScreenState extends ConsumerState<InputScreen> {
         _PreviewItem(
             label: '差额',
             value: diff > 0
-                ? '+${formatWan(diff)}（${mainLabel}多）'
-                : '${formatWan(diff.abs())}（${mainLabel}少）',
+                ? '+${formatWan(diff)}（$mainLabel多）'
+                : '${formatWan(diff.abs())}（$mainLabel少）',
             valueColor: diff > 0 ? Colors.red[700] : Colors.green[700]),
         const SizedBox(height: 20),
         Row(
@@ -359,7 +359,7 @@ class _PreviewItem extends StatelessWidget {
               style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  color: valueColor ?? const Color(0xFF1B3A6B))),
+                  color: valueColor ?? const Color(0xFF0C2B24))),
         ],
       ),
     );

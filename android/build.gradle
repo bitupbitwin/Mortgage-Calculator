@@ -1,16 +1,5 @@
-buildscript {
-    ext.kotlin_version = '1.9.0'
-    repositories {
-        google()
-        mavenCentral()
-    }
-    dependencies {
-        classpath 'com.android.tools.build:gradle:8.1.0'
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-    }
-}
-
 allprojects {
+    ext.kotlin_version = '1.9.0'
     repositories {
         google()
         mavenCentral()
@@ -23,6 +12,18 @@ subprojects {
 }
 subprojects {
     project.evaluationDependsOn(':app')
+}
+subprojects {
+    project.plugins.withId("com.android.application") {
+        project.android {
+            ndkVersion = "25.1.8937393"
+        }
+    }
+    project.plugins.withId("com.android.library") {
+        project.android {
+            ndkVersion = "25.1.8937393"
+        }
+    }
 }
 
 tasks.register("clean", Delete) {

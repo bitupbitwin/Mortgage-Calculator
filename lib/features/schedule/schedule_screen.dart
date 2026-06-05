@@ -46,7 +46,7 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
               Switch(
                 value: _showPrepaymentOnly,
                 onChanged: (v) => setState(() => _showPrepaymentOnly = v),
-                activeColor: const Color(0xFFC8941A),
+                activeThumbColor: const Color(0xFF1B7C67),
               ),
             ],
           ),
@@ -85,7 +85,7 @@ class _SummaryBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: const Color(0xFF1B3A6B),
+      color: const Color(0xFF0C2B24),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -125,7 +125,7 @@ class _TableHeader extends StatelessWidget {
     const style = TextStyle(
         fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF555555));
     return Container(
-      color: const Color(0xFFE8ECF8),
+      color: const Color(0xFFDCECE6),
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
       child: const Row(
         children: [
@@ -157,8 +157,8 @@ class _RecordRow extends StatelessWidget {
     final hasPrepay = record.prepayment > 0;
     return Container(
       color: hasPrepay
-          ? const Color(0xFFFFF8E8)
-          : (isEven ? Colors.white : const Color(0xFFFAFAFA)),
+          ? const Color(0xFFE0F2EC)
+          : (isEven ? Colors.white : const Color(0xFFF2F7F5)),
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
       child: Row(
         children: [
@@ -174,11 +174,11 @@ class _RecordRow extends StatelessWidget {
           Expanded(child: _Cell(formatMonthly(record.payment), bold: true)),
           Expanded(
               child: _Cell(formatMonthly(record.interest),
-                  color: Colors.orange[700])),
+                  color: const Color(0xFF555555))),
           Expanded(child: _Cell(formatMonthly(record.principal))),
           Expanded(
               child: _Cell(formatWan(record.balance),
-                  color: const Color(0xFF1B3A6B))),
+                  color: const Color(0xFF0C2B24))),
           SizedBox(
             width: 56,
             child: hasPrepay
@@ -187,8 +187,8 @@ class _RecordRow extends StatelessWidget {
                     textAlign: TextAlign.right,
                     style: const TextStyle(
                         fontSize: 12,
-                        color: Color(0xFFC8941A),
-                        fontWeight: FontWeight.bold),
+                        color: Color(0xFF1B7C67),
+                        fontWeight: FontWeight.w600),
                   )
                 : const SizedBox.shrink(),
           ),
