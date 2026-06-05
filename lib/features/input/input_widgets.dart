@@ -77,7 +77,7 @@ class RepaymentTypeSelector extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: _TypeButton(
+              child: _ToggleButton(
                 label: '等额本息',
                 selected: value == RepaymentType.equalPayment,
                 onTap: () => onChanged(RepaymentType.equalPayment),
@@ -85,7 +85,7 @@ class RepaymentTypeSelector extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             Expanded(
-              child: _TypeButton(
+              child: _ToggleButton(
                 label: '等额本金',
                 selected: value == RepaymentType.equalPrincipal,
                 onTap: () => onChanged(RepaymentType.equalPrincipal),
@@ -98,12 +98,57 @@ class RepaymentTypeSelector extends StatelessWidget {
   }
 }
 
-class _TypeButton extends StatelessWidget {
+class PrepaymentModeSelector extends StatelessWidget {
+  final PrepaymentMode value;
+  final ValueChanged<PrepaymentMode> onChanged;
+
+  const PrepaymentModeSelector({
+    super.key,
+    required this.value,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('提前还款方式',
+            style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF1B3A6B))),
+        const SizedBox(height: 6),
+        Row(
+          children: [
+            Expanded(
+              child: _ToggleButton(
+                label: '减少月供',
+                selected: value == PrepaymentMode.reducePayment,
+                onTap: () => onChanged(PrepaymentMode.reducePayment),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: _ToggleButton(
+                label: '缩短期限',
+                selected: value == PrepaymentMode.shortenTerm,
+                onTap: () => onChanged(PrepaymentMode.shortenTerm),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _ToggleButton extends StatelessWidget {
   final String label;
   final bool selected;
   final VoidCallback onTap;
 
-  const _TypeButton(
+  const _ToggleButton(
       {required this.label, required this.selected, required this.onTap});
 
   @override
@@ -146,20 +191,22 @@ class _TypeButton extends StatelessWidget {
 class PrepaymentRow extends StatelessWidget {
   final Prepayment prepayment;
   final int index;
+  final int loanStartYear;
   final VoidCallback onDelete;
 
   const PrepaymentRow({
     super.key,
     required this.prepayment,
     required this.index,
+    required this.loanStartYear,
     required this.onDelete,
   });
 
   String _monthLabel(int month) {
-    final year = 2025 + (month - 1) ~/ 12;
+    final year = loanStartYear + (month - 1) ~/ 12;
     final m = ((month - 1) % 12) + 1;
-    if (m == 12) return '${year + 1}年末';
-    return '$year年第$m月末';
+    if (m == 12) return '${year}年末';
+    return '${year}年第${m}月末';
   }
 
   @override
@@ -201,16 +248,24 @@ class PrepaymentRow extends StatelessWidget {
 }
 
 class AddPrepaymentDialog extends StatefulWidget {
-  const AddPrepaymentDialog({super.key});
+  final int loanStartYear;
+
+  const AddPrepaymentDialog({super.key, required this.loanStartYear});
 
   @override
   State<AddPrepaymentDialog> createState() => _AddPrepaymentDialogState();
 }
 
 class _AddPrepaymentDialogState extends State<AddPrepaymentDialog> {
-  int _selectedYear = 2027;
+  late int _selectedYear;
   int _selectedMonth = 12;
   final _amountController = TextEditingController(text: '30');
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedYear = widget.loanStartYear + 1;
+  }
 
   @override
   void dispose() {
@@ -219,12 +274,13 @@ class _AddPrepaymentDialogState extends State<AddPrepaymentDialog> {
   }
 
   int get _atMonth {
-    final year = _selectedYear - 2025;
-    return year * 12 + _selectedMonth;
+    final yearOffset = _selectedYear - widget.loanStartYear;
+    return yearOffset * 12 + _selectedMonth;
   }
 
   @override
   Widget build(BuildContext context) {
+    final years = List.generate(30, (i) => widget.loanStartYear + 1 + i);
     return AlertDialog(
       title: const Text('添加提前还款节点',
           style: TextStyle(color: Color(0xFF0C2B24), fontWeight: FontWeight.bold)),
@@ -237,7 +293,7 @@ class _AddPrepaymentDialogState extends State<AddPrepaymentDialog> {
               const SizedBox(width: 8),
               DropdownButton<int>(
                 value: _selectedYear,
-                items: List.generate(30, (i) => 2026 + i)
+                items: years
                     .map((y) => DropdownMenuItem(value: y, child: Text('$y年')))
                     .toList(),
                 onChanged: (v) => setState(() => _selectedYear = v!),

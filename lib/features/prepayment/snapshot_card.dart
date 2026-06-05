@@ -70,7 +70,7 @@ class SnapshotCard extends StatelessWidget {
                   balance: snapshot.balanceEP,
                   paidInterest: snapshot.paidInterestEP,
                   nextPayment: snapshot.nextPaymentEP,
-                  totalPrincipal: snapshot.balanceEP + snapshot.paidInterestEP,
+                  originalPrincipal: snapshot.originalPrincipal,
                 )),
                 Container(width: 1, color: const Color(0xFFEEEEEE)),
                 Expanded(
@@ -79,7 +79,7 @@ class SnapshotCard extends StatelessWidget {
                   balance: snapshot.balanceEPrincipal,
                   paidInterest: snapshot.paidInterestEPrincipal,
                   nextPayment: snapshot.nextPaymentEPrincipal,
-                  totalPrincipal: snapshot.balanceEPrincipal + snapshot.paidInterestEPrincipal,
+                  originalPrincipal: snapshot.originalPrincipal,
                   isRight: true,
                 )),
               ],
@@ -129,7 +129,7 @@ class _HalfPanel extends StatelessWidget {
   final double balance;
   final double paidInterest;
   final double nextPayment;
-  final double totalPrincipal;
+  final double originalPrincipal;
   final bool isRight;
 
   const _HalfPanel({
@@ -137,14 +137,16 @@ class _HalfPanel extends StatelessWidget {
     required this.balance,
     required this.paidInterest,
     required this.nextPayment,
-    required this.totalPrincipal,
+    required this.originalPrincipal,
     this.isRight = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    final progressValue =
-        totalPrincipal > 0 ? (balance / totalPrincipal).clamp(0.0, 1.0) : 0.0;
+    // repayment progress: 0 = nothing paid, 1 = fully paid off
+    final progressValue = originalPrincipal > 0
+        ? (1 - balance / originalPrincipal).clamp(0.0, 1.0)
+        : 0.0;
 
     return Padding(
       padding: const EdgeInsets.all(16),

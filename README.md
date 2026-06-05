@@ -1,84 +1,106 @@
-# Mortgage Calculator (房贷计算器)
+# 房贷计算器 (MortgageCalc)
 
-这是一个基于 Flutter 构建的现代化、高性能且用户体验卓越的房贷计算器应用。应用采用了 Riverpod 进行状态管理，支持等额本息和等额本金两种经典还款方式的深度多维度对比，并创新地支持了**动态提前还款计划模拟**以及**可视化余额变化趋势曲线**。
+一款基于 Flutter 的房贷计算器 Android 应用，支持公积金/商业贷款的还款模拟、提前还款规划，以及公积金「月冲 vs 年冲」策略对比。
 
----
+## 功能特性
 
-## 🌟 功能亮点 (Key Features)
+- **两种还款方式**：等额本息、等额本金，实时对比首月月供与总利息
+- **两种提前还款方式**：
+  - **减少月供**：保持还款期限不变，降低每月月供
+  - **缩短期限**：保持月供不变，提前还清贷款（更省利息）
+- **提前还款计划**：可添加多个提前还款节点（指定年月与金额），自动换算到对应还款月
+- **月冲 vs 年冲对比**：分析公积金按月偿还月供（月冲）与按年一次性提前还款（年冲）两种策略的利息差异
+- **还款明细**：逐月还款计划表（月供、利息、本金、剩余本金）
+- **年度快照**：在每个提前还款节点对比等额本息/等额本金的余额、已付利息与下期月供
+- **参数持久化**：贷款参数通过 `shared_preferences` 本地保存
+- **竖屏专用**：锁定竖屏显示，不随设备旋转
 
-- **💰 双重还款方式对比**：支持“等额本息”与“等额本金”两种模式，直接横向对比首月月供、总利息、还款总额及实际还款月数，清晰呈现利息差额。
-- **📅 动态提前还款模拟**：可在还款周期内的任意月份插入任意金额的提前还款计划，系统将动态、智能地重算后续月供与利息。
-- **📊 趋势图表可视化**：集成高性能的 `fl_chart` 图表库，动态绘制剩余贷款余额的变化曲线，直观呈现资产沉淀过程。
-- **🗓️ 逐月还款计划清单**：生成完整、详实的逐月还款流水，清晰展现每月月供中本金与利息的构成比例。
-- **⚡ 现代状态管理**：核心计算引擎由高性能的 Dart 原生算法驱动，配合 Riverpod 实现精细的数据流驱动与 UI 动态局部重绘。
+## 计算逻辑
 
----
+### 等额本息（Equal Payment）
+每月还款额固定：
 
-## 🏗️ 目录结构 (Directory Structure)
-
-```text
-lib/
-├── core/
-│   ├── calculator.dart      # 核心房贷与提前还款计算引擎 (Core math engine)
-│   ├── models.dart          # 基础数据模型 (Data models)
-│   └── formatters.dart      # 金额与日期格式化工具 (Formatters)
-├── providers/
-│   └── calculator_provider.dart  # Riverpod 状态提供者 (State provider)
-└── features/
-    ├── input/               # 参数输入模块 (Input screen & widgets)
-    ├── prepayment/          # 提前还款规则与快照模块 (Prepayment rule setup)
-    ├── result/              # 计算结果与对比模块 (Result analysis)
-    └── schedule/            # 逐月还款计划明细表模块 (Detailed schedule sheet)
+```
+M = P × r × (1+r)^n / [(1+r)^n − 1]
 ```
 
----
+其中 `P` 为本金，`r` 为月利率（年利率 / 12），`n` 为还款月数。
 
-## 🛠️ 构建与运行 (Build & Run)
+- **减少月供**模式：每月按当前剩余本金和剩余月数重新计算月供
+- **缩短期限**模式：月供固定为初始值，提前还款后用固定月供更快冲抵本金，从而提前还清
 
-### 前提条件 (Prerequisites)
-- Flutter SDK (>= 3.19.0)
-- Android SDK (with Gradle 8.3+)
+### 等额本金（Equal Principal）
+每月偿还本金固定，利息随剩余本金递减：
 
-### 运行步骤 (Steps)
+```
+每月本金 = 剩余本金 / 剩余月数（减少月供）
+每月本金 = 初始本金 / 总月数      （缩短期限）
+每月利息 = 剩余本金 × r
+```
 
-1. 克隆项目到本地 (Clone the repository)：
-   ```bash
-   git clone https://github.com/bitupbitwin/Mortgage-Calculator.git
-   cd Mortgage-Calculator
-   ```
+### 提前还款
+提前还款在「月末」执行，直接冲抵剩余本金（不超过当前余额），从而减少后续利息计算基数。
 
-2. 获取依赖包 (Get dependencies)：
-   ```bash
-   flutter pub get
-   ```
+### 月冲 vs 年冲
+- **月冲**：公积金每月偿还月供。月供中包含利息，公积金未全部冲抵本金，贷款按原计划摊销，总利息为标准值。
+- **年冲**：每月自掏腰包还月供，年底将 12 个月积攒的公积金一次性提前还款，**100% 冲抵本金**，减少利息计算基数。
 
-3. 运行项目进行调试 (Run in debug mode)：
-   ```bash
-   flutter run
-   ```
+因此年冲通常更省利息。计算上：月冲 = 无提前还款的标准摊销；年冲 = 每 12 个月提前还款 `公积金月额度 × 12`（缩短期限模式）。
 
-4. 构建 Android 正式发布包 (Build release APK)：
-   ```bash
-   flutter build apk
-   ```
+## 项目结构
 
----
+```
+lib/
+├── main.dart                          # 应用入口
+├── core/
+│   ├── models.dart                    # 数据模型（LoanInput / LoanResult / 快照 / 对比结果）
+│   ├── calculator.dart                # 核心计算（simulate / compareFlushModes / buildSnapshots）
+│   └── formatters.dart                # 金额格式化（万元 / 月供）
+├── providers/
+│   └── calculator_provider.dart       # Riverpod 状态管理与持久化
+└── features/
+    ├── input/                         # 参数输入与实时预览
+    ├── result/                        # 计算结果与对比卡片
+    ├── schedule/                      # 逐月还款明细表
+    ├── prepayment/                    # 提前还款年度快照
+    └── flush/                         # 月冲 vs 年冲对比
+test/
+└── calculator_test.dart               # 计算逻辑单元测试
+```
 
-## 🧪 自动化测试与数学验证 (Testing & Verification)
+## 技术栈
 
-本项目包含一套完整的自动化单元测试，对核心房贷计算引擎的数学准确性进行了多维验证。
+- Flutter 3.x / Dart 3.x
+- [flutter_riverpod](https://pub.dev/packages/flutter_riverpod) `^2.5.0` — 状态管理
+- [fl_chart](https://pub.dev/packages/fl_chart) `^0.67.0` — 图表
+- [shared_preferences](https://pub.dev/packages/shared_preferences) `^2.2.0` — 本地持久化
 
-### 测试覆盖内容：
-- **经典算法验证**：等额本息与等额本金的首月月供、累计利息数学模型比对。
-- **提前还款模拟**：支持在周期内任意月份扣减任意本金，精准演算“减少月供，期限不变”策略下的利息节省情况和各节点余额变化（如 2030 年底第 60 月末的账户剩余本金验证）。
-- **极限与边界校验**：
-  - 零利率（0%）贷款场景。
-  - 单月期限（1个月）短贷结清场景。
-  - 提前还款金额超过剩余本金总额时的余额保护（防负余额）。
-  - 超大额度本金（如 1 亿元）数值溢出防范。
+## 构建与运行
 
-### 运行测试：
-在项目根目录下直接运行以下命令即可：
+```bash
+# 安装依赖
+flutter pub get
+
+# 运行（连接设备或启动模拟器后）
+flutter run
+
+# 执行单元测试
+flutter test
+
+# 打包 Release APK
+flutter build apk --release
+
+# 打包 App Bundle（上架 Google Play）
+flutter build appbundle --release
+```
+
+- **minSdk**: 24，**compileSdk**: 34
+- 仅支持竖屏显示
+
+## 单元测试
+
+`test/calculator_test.dart` 覆盖：基础月供/总利息、提前还款后余额验证、边界条件（零利率、单月期限、超额提前还款、大额本金）、缩短期限模式、以及月冲 vs 年冲对比。
+
 ```bash
 flutter test
 ```

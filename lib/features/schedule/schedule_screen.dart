@@ -5,7 +5,14 @@ import '../../core/formatters.dart';
 import '../../providers/calculator_provider.dart';
 
 class ScheduleScreen extends ConsumerStatefulWidget {
-  const ScheduleScreen({super.key});
+  final LoanResult? resultOverride;
+  final String? titleOverride;
+
+  const ScheduleScreen({
+    super.key,
+    this.resultOverride,
+    this.titleOverride,
+  });
 
   @override
   ConsumerState<ScheduleScreen> createState() => _ScheduleScreenState();
@@ -16,8 +23,10 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final result = ref.watch(loanResultProvider);
-    final input = ref.watch(loanInputProvider);
+    final result =
+        widget.resultOverride ?? ref.watch(loanResultProvider);
+    final input =
+        widget.resultOverride == null ? ref.watch(loanInputProvider) : null;
 
     final records = _showPrepaymentOnly
         ? result.schedule.where((r) => r.prepayment > 0).toList()
@@ -25,8 +34,10 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('还款计划表',
-            style: TextStyle(fontWeight: FontWeight.bold)),
+        title: Text(
+          widget.titleOverride ?? '还款计划表',
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
         actions: [
           Row(
             children: [
@@ -43,7 +54,12 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
       ),
       body: Column(
         children: [
-          _SummaryBar(result: result, input: input),
+          _SummaryBar(
+            result: result,
+            repaymentLabel: input != null
+                ? (input.type == RepaymentType.equalPayment ? '等额本息' : '等额本金')
+                : (widget.titleOverride ?? '贷款'),
+          ),
           _TableHeader(),
           Expanded(
             child: ListView.builder(
@@ -62,9 +78,9 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
 
 class _SummaryBar extends StatelessWidget {
   final LoanResult result;
-  final LoanInput input;
+  final String repaymentLabel;
 
-  const _SummaryBar({required this.result, required this.input});
+  const _SummaryBar({required this.result, required this.repaymentLabel});
 
   @override
   Widget build(BuildContext context) {
@@ -74,12 +90,8 @@ class _SummaryBar extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _Item(
-              label: '还款方式',
-              value: input.type == RepaymentType.equalPayment ? '等额本息' : '等额本金'),
-          _Item(
-              label: '总利息',
-              value: formatWan(result.totalInterest)),
+          _Item(label: '还款方式', value: repaymentLabel),
+          _Item(label: '总利息', value: formatWan(result.totalInterest)),
           _Item(label: '实际月数', value: '${result.actualMonths}月'),
         ],
       ),
@@ -117,13 +129,17 @@ class _TableHeader extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
       child: const Row(
         children: [
-          SizedBox(width: 40, child: Text('期数', style: style, textAlign: TextAlign.center)),
+          SizedBox(
+              width: 40,
+              child: Text('期数', style: style, textAlign: TextAlign.center)),
           SizedBox(width: 8),
           Expanded(child: Text('月供', style: style, textAlign: TextAlign.right)),
           Expanded(child: Text('利息', style: style, textAlign: TextAlign.right)),
           Expanded(child: Text('还本', style: style, textAlign: TextAlign.right)),
           Expanded(child: Text('余额', style: style, textAlign: TextAlign.right)),
-          SizedBox(width: 56, child: Text('提前还', style: style, textAlign: TextAlign.right)),
+          SizedBox(
+              width: 56,
+              child: Text('提前还', style: style, textAlign: TextAlign.right)),
         ],
       ),
     );
@@ -155,10 +171,7 @@ class _RecordRow extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8),
-          Expanded(
-              child: _Cell(
-                  formatMonthly(record.payment),
-                  bold: true)),
+          Expanded(child: _Cell(formatMonthly(record.payment), bold: true)),
           Expanded(
               child: _Cell(formatMonthly(record.interest),
                   color: const Color(0xFF555555))),
