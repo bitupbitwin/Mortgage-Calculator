@@ -14,59 +14,66 @@ class HousePrepaymentRow extends StatelessWidget {
   final HousePrepayment prepayment;
   final int loanStartYear;
   final VoidCallback onDelete;
+  final VoidCallback onTap;
 
   const HousePrepaymentRow({
     super.key,
     required this.prepayment,
     required this.loanStartYear,
     required this.onDelete,
+    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: const Color(0xFFE2EDE8),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFFCAD8D3)),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.calendar_today, size: 16, color: Color(0xFF0C2B24)),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  houseMonthLabel(prepayment.atMonth, loanStartYear),
-                  style: const TextStyle(
-                      fontSize: 14, fontWeight: FontWeight.w500),
-                ),
-                const SizedBox(height: 2),
-                Wrap(
-                  spacing: 12,
-                  children: [
-                    if (prepayment.pfAmount > 0)
-                      Text('公积金 ${formatWan(prepayment.pfAmount)}',
-                          style: const TextStyle(
-                              fontSize: 12, color: Color(0xFF1B7C67))),
-                    if (prepayment.commercialAmount > 0)
-                      Text('商业贷 ${formatWan(prepayment.commercialAmount)}',
-                          style: const TextStyle(
-                              fontSize: 12, color: Color(0xFFC8941A))),
-                  ],
-                ),
-              ],
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: const Color(0xFFE2EDE8),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: const Color(0xFFCAD8D3)),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.calendar_today, size: 16, color: Color(0xFF0C2B24)),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    houseMonthLabel(prepayment.atMonth, loanStartYear),
+                    style: const TextStyle(
+                        fontSize: 14, fontWeight: FontWeight.w500),
+                  ),
+                  const SizedBox(height: 2),
+                  Wrap(
+                    spacing: 12,
+                    children: [
+                      if (prepayment.pfAmount > 0)
+                        Text('公积金 ${formatWan(prepayment.pfAmount)}',
+                            style: const TextStyle(
+                                fontSize: 12, color: Color(0xFF1B7C67))),
+                      if (prepayment.commercialAmount > 0)
+                        Text('商业贷 ${formatWan(prepayment.commercialAmount)}',
+                            style: const TextStyle(
+                                fontSize: 12, color: Color(0xFFC8941A))),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-          GestureDetector(
-            onTap: onDelete,
-            child: const Icon(Icons.close, size: 18, color: Colors.grey),
-          ),
-        ],
+            const Icon(Icons.edit_outlined, size: 16, color: Colors.grey),
+            const SizedBox(width: 8),
+            GestureDetector(
+              onTap: onDelete,
+              child: const Icon(Icons.close, size: 18, color: Colors.grey),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -76,12 +83,15 @@ class AddHousePrepaymentDialog extends StatefulWidget {
   final int loanStartYear;
   final bool hasPfLoan;
   final bool hasCommercialLoan;
+  /// 传入已有节点时为编辑模式，null 为新增模式
+  final HousePrepayment? initial;
 
   const AddHousePrepaymentDialog({
     super.key,
     required this.loanStartYear,
     required this.hasPfLoan,
     required this.hasCommercialLoan,
+    this.initial,
   });
 
   @override
@@ -91,15 +101,33 @@ class AddHousePrepaymentDialog extends StatefulWidget {
 
 class _AddHousePrepaymentDialogState extends State<AddHousePrepaymentDialog> {
   late int _selectedYear;
-  int _selectedMonth = 12;
-  final _pfController = TextEditingController();
-  final _commercialController = TextEditingController();
+  late int _selectedMonth;
+  late TextEditingController _pfController;
+  late TextEditingController _commercialController;
   String? _error;
+
+  bool get _isEdit => widget.initial != null;
 
   @override
   void initState() {
     super.initState();
-    _selectedYear = widget.loanStartYear + 1;
+    if (widget.initial != null) {
+      final p = widget.initial!;
+      final totalMonths = p.atMonth - 1;
+      _selectedYear = widget.loanStartYear + totalMonths ~/ 12;
+      _selectedMonth = totalMonths % 12 + 1;
+      _pfController = TextEditingController(
+          text: p.pfAmount > 0 ? (p.pfAmount / 10000).toStringAsFixed(0) : '');
+      _commercialController = TextEditingController(
+          text: p.commercialAmount > 0
+              ? (p.commercialAmount / 10000).toStringAsFixed(0)
+              : '');
+    } else {
+      _selectedYear = widget.loanStartYear + 1;
+      _selectedMonth = 12;
+      _pfController = TextEditingController();
+      _commercialController = TextEditingController();
+    }
   }
 
   @override
@@ -135,9 +163,9 @@ class _AddHousePrepaymentDialogState extends State<AddHousePrepaymentDialog> {
   Widget build(BuildContext context) {
     final years = List.generate(30, (i) => widget.loanStartYear + 1 + i);
     return AlertDialog(
-      title: const Text('添加提前还款节点',
-          style:
-              TextStyle(color: Color(0xFF0C2B24), fontWeight: FontWeight.bold)),
+      title: Text(_isEdit ? '编辑提前还款节点' : '添加提前还款节点',
+          style: const TextStyle(
+              color: Color(0xFF0C2B24), fontWeight: FontWeight.bold)),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,

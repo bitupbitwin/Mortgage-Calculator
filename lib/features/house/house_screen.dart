@@ -609,6 +609,7 @@ class _HouseScreenState extends ConsumerState<HouseScreen> {
                 onDelete: () => ref
                     .read(houseInputProvider.notifier)
                     .removePrepayment(e.key),
+                onTap: () => _showEditPrepaymentDialog(input, e.key, e.value),
               )),
       ],
     );
@@ -625,6 +626,22 @@ class _HouseScreenState extends ConsumerState<HouseScreen> {
     );
     if (result != null) {
       ref.read(houseInputProvider.notifier).addPrepayment(result);
+    }
+  }
+
+  Future<void> _showEditPrepaymentDialog(
+      HouseInput input, int index, HousePrepayment current) async {
+    final result = await showDialog<HousePrepayment>(
+      context: context,
+      builder: (_) => AddHousePrepaymentDialog(
+        loanStartYear: input.loanStartYear,
+        hasPfLoan: input.hasPfLoan,
+        hasCommercialLoan: input.hasCommercialLoan,
+        initial: current,
+      ),
+    );
+    if (result != null) {
+      ref.read(houseInputProvider.notifier).updatePrepayment(index, result);
     }
   }
 
