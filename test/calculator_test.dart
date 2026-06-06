@@ -3,9 +3,9 @@ import 'package:mortgage_calc/core/calculator.dart';
 import 'package:mortgage_calc/core/models.dart';
 import 'package:mortgage_calc/core/house_models.dart';
 
-// 提前还款计划：2027-2030年末各30万（贷款从2025年初开始）
-// 2027年末 = 第24个月末，2028年末 = 第36个月末，
-// 2029年末 = 第48个月末，2030年末 = 第60个月末
+// 提前还款计划：2026-2029年末各30万（贷款从2025年初开始）
+// 2026年末 = 第24个月末，2027年末 = 第36个月末，
+// 2028年末 = 第48个月末，2029年末 = 第60个月末
 const prepayments = [
   Prepayment(atMonth: 24, amount: 300000),
   Prepayment(atMonth: 36, amount: 300000),

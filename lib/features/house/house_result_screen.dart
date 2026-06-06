@@ -266,7 +266,7 @@ class _GrandTotalCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // grandTotal = housePrice + extraCost + totalInterest
-    // = downPayment + totalPaid (两种等价写法，费用不重复计入)
+    // = effectiveDownPayment + totalPaid (两种等价写法，费用不重复计入)
     final grandTotal = input.housePrice + input.extraCost + result.totalInterest;
 
     return _ResultCard(
