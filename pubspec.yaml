@@ -16,6 +16,19 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^3.0.0
+  flutter_launcher_icons: ^0.13.1
 
 flutter:
   uses-material-design: true
+
+# 应用图标生成配置
+# 准备一张 1024x1024 的 PNG 图标放到 assets/icon/app_icon.png
+# 然后运行：flutter pub run flutter_launcher_icons
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: "assets/icon/app_icon.png"
+  min_sdk_android: 24
+  # 自适应图标（Android 8.0+），背景色可按品牌调整
+  adaptive_icon_background: "#0C2B24"
+  adaptive_icon_foreground: "assets/icon/app_icon_foreground.png"

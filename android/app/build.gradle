@@ -22,8 +22,17 @@ if (flutterVersionName == null) {
     flutterVersionName = '1.0'
 }
 
+// 读取签名配置（key.properties 不纳入版本管理，见 android/key.properties.example）
+def keystoreProperties = new Properties()
+def keystorePropertiesFile = rootProject.file('key.properties')
+if (keystorePropertiesFile.exists()) {
+    keystorePropertiesFile.withReader('UTF-8') { reader ->
+        keystoreProperties.load(reader)
+    }
+}
+
 android {
-    namespace "com.example.mortgage_calc"
+    namespace "io.github.bitupbitwin.mortgage"
     compileSdkVersion 36
     ndkVersion "25.1.8937393"
 
@@ -41,16 +50,31 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.example.mortgage_calc"
+        applicationId "io.github.bitupbitwin.mortgage"
         minSdkVersion 24
         targetSdkVersion 34
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
     }
 
+    signingConfigs {
+        release {
+            if (keystorePropertiesFile.exists()) {
+                keyAlias keystoreProperties['keyAlias']
+                keyPassword keystoreProperties['keyPassword']
+                storeFile keystoreProperties['storeFile'] ? file(keystoreProperties['storeFile']) : null
+                storePassword keystoreProperties['storePassword']
+            }
+        }
+    }
+
     buildTypes {
         release {
-            signingConfig signingConfigs.debug
+            // 有正式签名时用 release，否则回退 debug 签名以便本地调试
+            signingConfig keystorePropertiesFile.exists() ? signingConfigs.release : signingConfigs.debug
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
 }

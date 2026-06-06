@@ -44,3 +44,8 @@ app.*.map.json
 
 # Local properties
 android/local.properties
+
+# 签名密钥与密码（绝不提交到版本库！）
+android/key.properties
+*.jks
+*.keystore
