@@ -3,6 +3,8 @@ import 'models.dart';
 import 'house_models.dart';
 
 double _monthlyPayment(double balance, double monthlyRate, int remaining) {
+  // 剩余期数 <= 0 视为一次性结清剩余本金（防御性，正常流程不可达）。
+  if (remaining <= 1) return balance * (1 + monthlyRate);
   if (monthlyRate == 0) return balance / remaining;
   final factor = pow(1 + monthlyRate, remaining).toDouble();
   return balance * monthlyRate * factor / (factor - 1);
