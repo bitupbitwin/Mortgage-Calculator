@@ -11,10 +11,10 @@ final houseInputProvider =
 
 List<HousePrepayment> _defaultPrepayments() {
   return const [
-    HousePrepayment(atMonth: 12, commercialAmount: 200000),
-    HousePrepayment(atMonth: 24, commercialAmount: 200000),
-    HousePrepayment(atMonth: 36, commercialAmount: 200000),
-    HousePrepayment(atMonth: 48, commercialAmount: 200000),
+    HousePrepayment(atMonth: 12, pfAmount: 200000),
+    HousePrepayment(atMonth: 24, pfAmount: 200000),
+    HousePrepayment(atMonth: 36, pfAmount: 200000),
+    HousePrepayment(atMonth: 48, pfAmount: 200000),
   ];
 }
 
@@ -108,6 +108,12 @@ class HouseInputNotifier extends StateNotifier<HouseInput> {
 
   void removePrepayment(int index) {
     final list = [...state.prepayments]..removeAt(index);
+    state = state.copyWith(prepayments: list);
+  }
+
+  void updatePrepayment(int index, HousePrepayment p) {
+    final list = [...state.prepayments]..[index] = p;
+    list.sort((a, b) => a.atMonth.compareTo(b.atMonth));
     state = state.copyWith(prepayments: list);
   }
 
