@@ -90,6 +90,17 @@ class HouseInputNotifier extends StateNotifier<HouseInput> {
     } catch (_) {}
   }
 
+  void addPrepayment(HousePrepayment p) {
+    final list = [...state.prepayments, p]
+      ..sort((a, b) => a.atMonth.compareTo(b.atMonth));
+    state = state.copyWith(prepayments: list);
+  }
+
+  void removePrepayment(int index) {
+    final list = [...state.prepayments]..removeAt(index);
+    state = state.copyWith(prepayments: list);
+  }
+
   void reset() {
     state = HouseInput(
       housePrice: 4200000,
@@ -102,4 +113,27 @@ class HouseInputNotifier extends StateNotifier<HouseInput> {
 final combinedResultProvider = Provider<CombinedLoanResult>((ref) {
   final input = ref.watch(houseInputProvider);
   return simulateCombined(input);
+});
+
+// 月冲 vs 年冲：以商业贷为主体（公积金通常用于冲抵高利率的商业贷），
+// 若无商业贷则退化为公积金贷款。
+final houseFlushPfProvider = StateProvider<double>((ref) => 2000.0);
+
+final houseFlushComparisonProvider = Provider<FlushComparisonResult>((ref) {
+  final input = ref.watch(houseInputProvider);
+  final pfAmount = ref.watch(houseFlushPfProvider);
+  final LoanInput loan = input.hasCommercialLoan
+      ? LoanInput(
+          principal: input.commercialLoanAmount,
+          annualRate: input.commercialAnnualRate,
+          termMonths: input.commercialTermMonths,
+          type: input.repaymentType,
+        )
+      : LoanInput(
+          principal: input.effectivePfLoan > 0 ? input.effectivePfLoan : 1,
+          annualRate: input.pfAnnualRate,
+          termMonths: input.pfTermMonths,
+          type: input.repaymentType,
+        );
+  return compareFlushModes(input: loan, monthlyPfAmount: pfAmount);
 });

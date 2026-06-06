@@ -22,13 +22,13 @@ class HouseResultScreen extends ConsumerWidget {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
+            _GrandTotalCard(input: input, result: result),
+            const SizedBox(height: 14),
             _CostCard(input: input),
             const SizedBox(height: 14),
             _MonthlyCard(input: input, result: result),
             const SizedBox(height: 14),
             _InterestCard(input: input, result: result),
-            const SizedBox(height: 14),
-            _GrandTotalCard(input: input, result: result),
             const SizedBox(height: 20),
             _buildScheduleButtons(context, input, result),
           ],
@@ -92,6 +92,10 @@ class _CostCard extends StatelessWidget {
       children: [
         _Row(label: '房屋总价', value: formatWan(input.housePrice)),
         _Row(
+          label: '首付（首付成数 ${(input.downPaymentRateOnPrice * 100).toStringAsFixed(1)}%）',
+          value: formatWan(input.downPayment),
+        ),
+        _Row(
           label: '中介费（${(input.agentFeeRate * 100).toStringAsFixed(1)}%）',
           value: formatWan(input.agentFee),
           valueColor: Colors.grey[700],
@@ -103,19 +107,14 @@ class _CostCard extends StatelessWidget {
         ),
         const _HDivider(),
         _Row(
-          label: '购房总成本',
-          value: formatWan(input.totalCost),
+          label: '实际首付（首付 + 税费）',
+          value: formatWan(input.effectiveDownPayment),
           bold: true,
           valueColor: const Color(0xFF1B3A6B),
         ),
         const SizedBox(height: 8),
         _Row(
-          label: '首付（首付成数 ${(input.downPaymentRateOnPrice * 100).toStringAsFixed(1)}%）',
-          value: formatWan(input.downPayment),
-          bold: true,
-        ),
-        _Row(
-          label: '贷款总额',
+          label: '贷款总额（房价 − 首付）',
           value: formatWan(input.totalLoan),
           bold: true,
           valueColor: const Color(0xFFC8941A),

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'features/input/input_screen.dart';
+import 'features/house/house_screen.dart';
 
 void main() {
   runApp(const ProviderScope(child: MortgageCalcApp()));
@@ -59,7 +59,7 @@ class MortgageCalcApp extends StatelessWidget {
           ),
         ),
       ),
-      home: const InputScreen(),
+      home: const HouseScreen(),
     );
   }
 }

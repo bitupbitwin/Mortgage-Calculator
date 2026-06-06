@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/formatters.dart';
-import '../../core/models.dart';
+import '../../core/house_models.dart';
 import '../../providers/house_provider.dart';
+import '../flush/flush_screen.dart';
 import '../input/input_widgets.dart';
+import 'house_prepayment_widgets.dart';
 import 'house_result_screen.dart';
 
 class HouseScreen extends ConsumerStatefulWidget {
@@ -122,7 +124,7 @@ class _HouseScreenState extends ConsumerState<HouseScreen> {
     return Scaffold(
       appBar: AppBar(
         title:
-            const Text('购房综合计算', style: TextStyle(fontWeight: FontWeight.bold)),
+            const Text('房贷计算器', style: TextStyle(fontWeight: FontWeight.bold)),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -146,7 +148,30 @@ class _HouseScreenState extends ConsumerState<HouseScreen> {
               const SizedBox(height: 20),
               _buildRepaymentSection(input),
               const SizedBox(height: 20),
+              _buildPrepaymentSection(input),
+              const SizedBox(height: 20),
               _buildPreviewCard(input),
+              const SizedBox(height: 12),
+              if (input.hasAnyLoan)
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => FlushScreen(
+                          pfProvider: houseFlushPfProvider,
+                          resultProvider: houseFlushComparisonProvider,
+                          subtitle: input.hasCommercialLoan
+                              ? '以商业贷为例（公积金冲抵商业贷）'
+                              : '以公积金贷款为例',
+                        ),
+                      ),
+                    ),
+                    icon: const Icon(Icons.compare_arrows, size: 16),
+                    label: const Text('月冲 vs 年冲'),
+                  ),
+                ),
               const SizedBox(height: 24),
               SizedBox(
                 width: double.infinity,
@@ -280,27 +305,65 @@ class _HouseScreenState extends ConsumerState<HouseScreen> {
           },
           onChanged: (_) => _syncToProvider(),
         ),
-        if (input.housePrice > 0)
-          Padding(
-            padding: const EdgeInsets.only(top: 8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        if (input.housePrice > 0) ...[
+          const SizedBox(height: 10),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF0F4FF),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: const Color(0xFFCCD5EE)),
+            ),
+            child: Column(
               children: [
-                Text(
-                  '首付成数 ${(input.downPaymentRateOnPrice * 100).toStringAsFixed(1)}%',
-                  style: const TextStyle(color: Colors.grey, fontSize: 13),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text('实际首付（含中介费+契税）',
+                        style: TextStyle(fontSize: 13, color: Color(0xFF555555))),
+                    Text(
+                      formatWan(input.effectiveDownPayment),
+                      style: const TextStyle(
+                        color: Color(0xFF1B3A6B),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                      ),
+                    ),
+                  ],
                 ),
+                const SizedBox(height: 4),
                 Text(
-                  '贷款总额 ${formatWan(input.totalLoan)}',
-                  style: const TextStyle(
-                    color: Color(0xFFC8941A),
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                  ),
+                  '= 首付 ${formatWan(input.downPayment)} + 税费 ${formatWan(input.extraCost)}',
+                  style: const TextStyle(fontSize: 11, color: Colors.grey),
+                ),
+                const Divider(height: 18),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      '首付成数 ${(input.downPaymentRateOnPrice * 100).toStringAsFixed(1)}%',
+                      style: const TextStyle(color: Colors.grey, fontSize: 13),
+                    ),
+                    Text(
+                      '贷款总额 ${formatWan(input.totalLoan)}',
+                      style: const TextStyle(
+                        color: Color(0xFFC8941A),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 2),
+                const Align(
+                  alignment: Alignment.centerRight,
+                  child: Text('= 房价 − 首付（税费不计入贷款）',
+                      style: TextStyle(fontSize: 11, color: Colors.grey)),
                 ),
               ],
             ),
           ),
+        ],
       ],
     );
   }
@@ -507,6 +570,62 @@ class _HouseScreenState extends ConsumerState<HouseScreen> {
         ),
       ],
     );
+  }
+
+  // ── 4.5 Prepayment plan ────────────────────────────────────────────
+
+  Widget _buildPrepaymentSection(HouseInput input) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            _sectionTitle('提前还款计划'),
+            TextButton.icon(
+              onPressed:
+                  input.hasAnyLoan ? () => _showAddPrepaymentDialog(input) : null,
+              icon: const Icon(Icons.add, size: 18),
+              label: const Text('添加节点'),
+            ),
+          ],
+        ),
+        if (!input.hasAnyLoan)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 8),
+            child: Text('请先设置贷款，才能添加提前还款',
+                style: TextStyle(color: Colors.grey, fontSize: 13)),
+          )
+        else if (input.prepayments.isEmpty)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 8),
+            child: Text('暂无提前还款计划，点击上方添加（可分别针对公积金/商业贷）',
+                style: TextStyle(color: Colors.grey, fontSize: 13)),
+          )
+        else
+          ...input.prepayments.asMap().entries.map((e) => HousePrepaymentRow(
+                prepayment: e.value,
+                loanStartYear: input.loanStartYear,
+                onDelete: () => ref
+                    .read(houseInputProvider.notifier)
+                    .removePrepayment(e.key),
+              )),
+      ],
+    );
+  }
+
+  Future<void> _showAddPrepaymentDialog(HouseInput input) async {
+    final result = await showDialog<HousePrepayment>(
+      context: context,
+      builder: (_) => AddHousePrepaymentDialog(
+        loanStartYear: input.loanStartYear,
+        hasPfLoan: input.hasPfLoan,
+        hasCommercialLoan: input.hasCommercialLoan,
+      ),
+    );
+    if (result != null) {
+      ref.read(houseInputProvider.notifier).addPrepayment(result);
+    }
   }
 
   // ── 5. Live preview ────────────────────────────────────────────────
