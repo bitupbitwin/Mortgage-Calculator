@@ -9,12 +9,22 @@ final houseInputProvider =
   (ref) => HouseInputNotifier(),
 );
 
+List<HousePrepayment> _defaultPrepayments() {
+  return const [
+    HousePrepayment(atMonth: 12, commercialAmount: 200000),
+    HousePrepayment(atMonth: 24, commercialAmount: 200000),
+    HousePrepayment(atMonth: 36, commercialAmount: 200000),
+    HousePrepayment(atMonth: 48, commercialAmount: 200000),
+  ];
+}
+
 class HouseInputNotifier extends StateNotifier<HouseInput> {
   HouseInputNotifier()
       : super(HouseInput(
           housePrice: 4200000,
           downPayment: 2000000,
           pfLoanAmount: 0,
+          prepayments: _defaultPrepayments(),
         )) {
     _loadSaved();
   }
@@ -106,6 +116,7 @@ class HouseInputNotifier extends StateNotifier<HouseInput> {
       housePrice: 4200000,
       downPayment: 2000000,
       pfLoanAmount: 0,
+      prepayments: _defaultPrepayments(),
     );
   }
 }
