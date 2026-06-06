@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/formatters.dart';
 import '../../core/house_models.dart';
 import '../../providers/house_provider.dart';
+import '../about/about_screen.dart';
 import '../flush/flush_screen.dart';
 import '../input/input_widgets.dart';
 import 'house_prepayment_widgets.dart';
@@ -130,6 +131,14 @@ class _HouseScreenState extends ConsumerState<HouseScreen> {
             icon: const Icon(Icons.refresh),
             tooltip: '重置',
             onPressed: _resetAll,
+          ),
+          IconButton(
+            icon: const Icon(Icons.info_outline),
+            tooltip: '关于',
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const AboutScreen()),
+            ),
           ),
         ],
       ),
