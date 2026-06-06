@@ -23,7 +23,7 @@ class HouseInputNotifier extends StateNotifier<HouseInput> {
       : super(HouseInput(
           housePrice: 4200000,
           downPayment: 2000000,
-          pfLoanAmount: 0,
+          pfLoanAmount: 2000000,
           prepayments: _defaultPrepayments(),
         )) {
     _loadSaved();
@@ -121,7 +121,7 @@ class HouseInputNotifier extends StateNotifier<HouseInput> {
     state = HouseInput(
       housePrice: 4200000,
       downPayment: 2000000,
-      pfLoanAmount: 0,
+      pfLoanAmount: 2000000,
       prepayments: _defaultPrepayments(),
     );
   }

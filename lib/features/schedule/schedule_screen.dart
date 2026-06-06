@@ -23,7 +23,7 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final result =
+    final LoanResult result =
         widget.resultOverride ?? ref.watch(loanResultProvider);
     final input =
         widget.resultOverride == null ? ref.watch(loanInputProvider) : null;

@@ -37,7 +37,7 @@ class HouseInput {
     required this.downPayment,
     this.agentFeeRate = 0.02,
     this.deedTaxRate = 0.01,
-    this.pfLoanAmount = 0,
+    this.pfLoanAmount = 2000000,
     this.pfAnnualRate = 0.0305,
     this.pfTermMonths = 360,
     this.commercialAnnualRate = 0.0395,
