@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:fl_chart/fl_chart.dart';
 import '../../core/formatters.dart';
 import '../../core/house_models.dart';
+import '../../core/models.dart';
 import '../../providers/house_provider.dart';
 import '../schedule/schedule_screen.dart';
 
@@ -29,6 +31,10 @@ class HouseResultScreen extends ConsumerWidget {
             _MonthlyCard(input: input, result: result),
             const SizedBox(height: 14),
             _InterestCard(input: input, result: result),
+            const SizedBox(height: 14),
+            _BalanceCurveCard(result: result),
+            const SizedBox(height: 14),
+            _PieCard(result: result),
             const SizedBox(height: 20),
             _buildScheduleButtons(context, input, result),
           ],
@@ -416,6 +422,306 @@ class _LoanMini extends StatelessWidget {
               textAlign: TextAlign.center),
         ],
       ),
+    );
+  }
+}
+
+// ── 余额变化曲线 ───────────────────────────────────────────────────────────────
+
+class _BalanceCurveCard extends StatelessWidget {
+  final CombinedLoanResult result;
+  const _BalanceCurveCard({required this.result});
+
+  List<FlSpot> _spots(LoanResult r) {
+    final spots = <FlSpot>[];
+    for (int i = 0; i < r.schedule.length; i += 6) {
+      spots.add(FlSpot(i.toDouble(), r.schedule[i].balance / 10000));
+    }
+    // 确保终点为 0
+    if (spots.isNotEmpty && spots.last.y > 0) {
+      spots.add(FlSpot((r.schedule.length - 1).toDouble(), 0));
+    }
+    return spots;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final pf = result.pfResult;
+    final comm = result.commercialResult;
+    if (pf == null && comm == null) return const SizedBox.shrink();
+
+    final lines = <LineChartBarData>[];
+
+    if (pf != null && pf.schedule.isNotEmpty) {
+      lines.add(LineChartBarData(
+        spots: _spots(pf),
+        isCurved: true,
+        color: const Color(0xFF1B3A6B),
+        barWidth: 2,
+        dotData: const FlDotData(show: false),
+        belowBarData: BarAreaData(
+          show: true,
+          color: const Color(0xFF1B3A6B).withValues(alpha: 0.08),
+        ),
+      ));
+    }
+
+    if (comm != null && comm.schedule.isNotEmpty) {
+      lines.add(LineChartBarData(
+        spots: _spots(comm),
+        isCurved: true,
+        color: const Color(0xFFC8941A),
+        barWidth: 2,
+        dotData: const FlDotData(show: false),
+        belowBarData: BarAreaData(
+          show: true,
+          color: const Color(0xFFC8941A).withValues(alpha: 0.08),
+        ),
+      ));
+    }
+
+    final hasBoth = pf != null && comm != null;
+
+    return _ResultCard(
+      title: '余额变化曲线（万元）',
+      children: [
+        if (hasBoth)
+          Row(
+            children: [
+              _ChartLegend(color: const Color(0xFF1B3A6B), label: '公积金'),
+              const SizedBox(width: 16),
+              _ChartLegend(color: const Color(0xFFC8941A), label: '商业贷'),
+            ],
+          ),
+        if (hasBoth) const SizedBox(height: 10),
+        SizedBox(
+          height: 200,
+          child: LineChart(LineChartData(
+            gridData: FlGridData(
+              show: true,
+              drawVerticalLine: false,
+              getDrawingHorizontalLine: (_) =>
+                  FlLine(color: Colors.grey[200]!, strokeWidth: 1),
+            ),
+            titlesData: FlTitlesData(
+              leftTitles: AxisTitles(
+                sideTitles: SideTitles(
+                  showTitles: true,
+                  reservedSize: 42,
+                  getTitlesWidget: (v, _) => Text(
+                    v.toInt().toString(),
+                    style: const TextStyle(fontSize: 10, color: Colors.grey),
+                  ),
+                ),
+              ),
+              bottomTitles: AxisTitles(
+                sideTitles: SideTitles(
+                  showTitles: true,
+                  reservedSize: 22,
+                  interval: 60,
+                  getTitlesWidget: (v, _) => Text(
+                    '${(v / 12).toInt()}年',
+                    style: const TextStyle(fontSize: 10, color: Colors.grey),
+                  ),
+                ),
+              ),
+              topTitles: const AxisTitles(
+                  sideTitles: SideTitles(showTitles: false)),
+              rightTitles: const AxisTitles(
+                  sideTitles: SideTitles(showTitles: false)),
+            ),
+            borderData: FlBorderData(show: false),
+            lineBarsData: lines,
+          )),
+        ),
+      ],
+    );
+  }
+}
+
+// ── 本息构成饼图 ───────────────────────────────────────────────────────────────
+
+class _PieCard extends StatelessWidget {
+  final CombinedLoanResult result;
+  const _PieCard({required this.result});
+
+  @override
+  Widget build(BuildContext context) {
+    final pfInterest = result.pfResult?.totalInterest ?? 0;
+    final commInterest = result.commercialResult?.totalInterest ?? 0;
+    final pfPrincipal =
+        result.pfResult?.schedule.fold(0.0, (s, r) => s + r.principal) ?? 0;
+    final commPrincipal =
+        result.commercialResult?.schedule.fold(0.0, (s, r) => s + r.principal) ?? 0;
+
+    final totalPrincipal = pfPrincipal + commPrincipal;
+    final totalInterest = pfInterest + commInterest;
+    final total = totalPrincipal + totalInterest;
+    if (total == 0) return const SizedBox.shrink();
+
+    final hasBoth = (result.pfResult != null) && (result.commercialResult != null);
+
+    // 单一贷款：2段（本金+利息）；双贷款：3段（公积金利息、商贷利息、总本金）
+    final sections = hasBoth
+        ? [
+            PieChartSectionData(
+              value: pfInterest,
+              color: const Color(0xFF1B3A6B),
+              title: '公积金\n利息',
+              radius: 65,
+              titleStyle: const TextStyle(
+                  fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white),
+            ),
+            PieChartSectionData(
+              value: commInterest,
+              color: const Color(0xFFC8941A),
+              title: '商贷\n利息',
+              radius: 65,
+              titleStyle: const TextStyle(
+                  fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white),
+            ),
+            PieChartSectionData(
+              value: totalPrincipal,
+              color: const Color(0xFF1B7C67),
+              title: '本金',
+              radius: 65,
+              titleStyle: const TextStyle(
+                  fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white),
+            ),
+          ]
+        : [
+            PieChartSectionData(
+              value: totalPrincipal,
+              color: const Color(0xFF0C2B24),
+              title: '本金\n${formatWan(totalPrincipal)}',
+              radius: 65,
+              titleStyle: const TextStyle(
+                  fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white),
+            ),
+            PieChartSectionData(
+              value: totalInterest,
+              color: const Color(0xFF1B7C67),
+              title: '利息\n${formatWan(totalInterest)}',
+              radius: 65,
+              titleStyle: const TextStyle(
+                  fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white),
+            ),
+          ];
+
+    return _ResultCard(
+      title: '本息构成',
+      children: [
+        Row(
+          children: [
+            SizedBox(
+              height: 150,
+              width: 150,
+              child: PieChart(PieChartData(
+                sections: sections,
+                sectionsSpace: 2,
+                centerSpaceRadius: 0,
+              )),
+            ),
+            const SizedBox(width: 20),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (hasBoth) ...[
+                    _PieLegend(
+                      color: const Color(0xFF1B3A6B),
+                      label: '公积金利息',
+                      value: formatWan(pfInterest),
+                      pct: '${(pfInterest / total * 100).toStringAsFixed(1)}%',
+                    ),
+                    const SizedBox(height: 8),
+                    _PieLegend(
+                      color: const Color(0xFFC8941A),
+                      label: '商贷利息',
+                      value: formatWan(commInterest),
+                      pct: '${(commInterest / total * 100).toStringAsFixed(1)}%',
+                    ),
+                    const SizedBox(height: 8),
+                    _PieLegend(
+                      color: const Color(0xFF1B7C67),
+                      label: '还款本金',
+                      value: formatWan(totalPrincipal),
+                      pct: '${(totalPrincipal / total * 100).toStringAsFixed(1)}%',
+                    ),
+                  ] else ...[
+                    _PieLegend(
+                      color: const Color(0xFF0C2B24),
+                      label: '还款本金',
+                      value: formatWan(totalPrincipal),
+                      pct: '${(totalPrincipal / total * 100).toStringAsFixed(1)}%',
+                    ),
+                    const SizedBox(height: 8),
+                    _PieLegend(
+                      color: const Color(0xFF1B7C67),
+                      label: '支付利息',
+                      value: formatWan(totalInterest),
+                      pct: '${(totalInterest / total * 100).toStringAsFixed(1)}%',
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _ChartLegend extends StatelessWidget {
+  final Color color;
+  final String label;
+  const _ChartLegend({required this.color, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(width: 12, height: 3, color: color,
+            margin: const EdgeInsets.only(right: 6)),
+        Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+      ],
+    );
+  }
+}
+
+class _PieLegend extends StatelessWidget {
+  final Color color;
+  final String label;
+  final String value;
+  final String pct;
+  const _PieLegend(
+      {required this.color,
+      required this.label,
+      required this.value,
+      required this.pct});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+            width: 10, height: 10,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+            margin: const EdgeInsets.only(right: 8)),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label,
+                  style: const TextStyle(fontSize: 11, color: Colors.grey)),
+              Text('$value  $pct',
+                  style: const TextStyle(
+                      fontSize: 13, fontWeight: FontWeight.bold)),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
