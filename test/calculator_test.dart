@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mortgage_calc/core/calculator.dart';
 import 'package:mortgage_calc/core/models.dart';
+import 'package:mortgage_calc/core/house_models.dart';
 
 // 提前还款计划：2027-2030年末各30万（贷款从2025年初开始）
 // 2027年末 = 第24个月末，2028年末 = 第36个月末，
@@ -198,6 +199,86 @@ final input = LoanInput(
       final small = compareFlushModes(input: input, monthlyPfAmount: 1000);
       final big = compareFlushModes(input: input, monthlyPfAmount: 3000);
       expect(big.savedByAnnual, greaterThan(small.savedByAnnual));
+    });
+  });
+
+  group('购房组合贷', () {
+    // 房价420万，首付200万 → 贷款220万；公积金120万，商业贷自动=100万
+    HouseInput houseInput({List<HousePrepayment> prepayments = const []}) =>
+        HouseInput(
+          housePrice: 4200000,
+          downPayment: 2000000,
+          pfLoanAmount: 1200000,
+          prepayments: prepayments,
+        );
+
+    test('中介费契税并入首付，不进贷款', () {
+      final input = houseInput();
+      // 税费 = 420万 *（2% + 1%）= 12.6万
+      expect(input.extraCost, closeTo(126000, 1));
+      // 实际首付 = 200 + 12.6 = 212.6万
+      expect(input.effectiveDownPayment, closeTo(2126000, 1));
+      // 贷款总额 = 房价 − 首付 = 220万（不含税费）
+      expect(input.totalLoan, closeTo(2200000, 1));
+    });
+
+    test('公积金优先，商业贷自动推算', () {
+      final input = houseInput();
+      expect(input.effectivePfLoan, closeTo(1200000, 1));
+      expect(input.commercialLoanAmount, closeTo(1000000, 1));
+    });
+
+    test('公积金填0时商业贷=全部贷款', () {
+      final input = houseInput().copyWith(pfLoanAmount: 0);
+      expect(input.hasPfLoan, false);
+      expect(input.commercialLoanAmount, closeTo(2200000, 1));
+    });
+
+    test('购房全程总支出 = 房价 + 税费 + 利息', () {
+      final input = houseInput();
+      final result = simulateCombined(input);
+      final grandTotal =
+          input.housePrice + input.extraCost + result.totalInterest;
+      // 等价写法：实际首付 + 还款总额
+      final alt = input.effectiveDownPayment + result.totalPaid;
+      expect(grandTotal, closeTo(alt, 1));
+    });
+
+    test('分项提前还款：仅公积金提前还款减少公积金利息', () {
+      final base = simulateCombined(houseInput());
+      final withPf = simulateCombined(houseInput(prepayments: const [
+        HousePrepayment(atMonth: 24, pfAmount: 300000),
+      ]));
+      // 公积金利息减少
+      expect(withPf.pfResult!.totalInterest,
+          lessThan(base.pfResult!.totalInterest));
+      // 商业贷不受影响
+      expect(withPf.commercialResult!.totalInterest,
+          closeTo(base.commercialResult!.totalInterest, 1));
+    });
+
+    test('分项提前还款：仅商业贷提前还款减少商业贷利息', () {
+      final base = simulateCombined(houseInput());
+      final withComm = simulateCombined(houseInput(prepayments: const [
+        HousePrepayment(atMonth: 24, commercialAmount: 300000),
+      ]));
+      expect(withComm.commercialResult!.totalInterest,
+          lessThan(base.commercialResult!.totalInterest));
+      expect(withComm.pfResult!.totalInterest,
+          closeTo(base.pfResult!.totalInterest, 1));
+    });
+
+    test('同一节点可同时提前还款公积金与商业贷', () {
+      final base = simulateCombined(houseInput());
+      final both = simulateCombined(houseInput(prepayments: const [
+        HousePrepayment(
+            atMonth: 24, pfAmount: 200000, commercialAmount: 200000),
+      ]));
+      expect(both.totalInterest, lessThan(base.totalInterest));
+      expect(both.pfResult!.totalInterest,
+          lessThan(base.pfResult!.totalInterest));
+      expect(both.commercialResult!.totalInterest,
+          lessThan(base.commercialResult!.totalInterest));
     });
   });
 }

@@ -1,6 +1,22 @@
 import 'dart:math';
 import 'models.dart';
 
+/// 购房场景下的提前还款节点：同一时间点可分别对公积金贷款与商业贷款
+/// 提前还款，允许只填其中一个（另一个为 0）。
+class HousePrepayment {
+  final int atMonth;
+  final double pfAmount;
+  final double commercialAmount;
+
+  const HousePrepayment({
+    required this.atMonth,
+    this.pfAmount = 0,
+    this.commercialAmount = 0,
+  });
+
+  double get total => pfAmount + commercialAmount;
+}
+
 class HouseInput {
   final double housePrice;
   final double downPayment;
@@ -14,6 +30,7 @@ class HouseInput {
   final RepaymentType repaymentType;
   final PrepaymentMode prepaymentMode;
   final int loanStartYear;
+  final List<HousePrepayment> prepayments;
 
   HouseInput({
     required this.housePrice,
@@ -28,13 +45,23 @@ class HouseInput {
     this.repaymentType = RepaymentType.equalPayment,
     this.prepaymentMode = PrepaymentMode.reducePayment,
     int? loanStartYear,
+    this.prepayments = const [],
   }) : loanStartYear = loanStartYear ?? DateTime.now().year;
 
   double get agentFee => housePrice * agentFeeRate;
   double get deedTax => housePrice * deedTaxRate;
   double get extraCost => agentFee + deedTax;
+
+  /// 购房总成本（房价 + 税费），仅用于展示参考。
   double get totalCost => housePrice + extraCost;
-  double get totalLoan => max(0, totalCost - downPayment);
+
+  /// 中介费与契税在购房初期一次性缴纳，并入首付，不进入贷款。
+  /// 实际首付 = 用户输入首付 + 税费。
+  double get effectiveDownPayment => downPayment + extraCost;
+
+  /// 贷款总额仅基于房价：房价 − 用户输入的首付（税费不进贷款）。
+  double get totalLoan => max(0, housePrice - downPayment);
+
   double get effectivePfLoan => min(pfLoanAmount, totalLoan);
   double get commercialLoanAmount => max(0, totalLoan - effectivePfLoan);
   double get downPaymentRateOnPrice =>
@@ -57,6 +84,7 @@ class HouseInput {
     RepaymentType? repaymentType,
     PrepaymentMode? prepaymentMode,
     int? loanStartYear,
+    List<HousePrepayment>? prepayments,
   }) {
     return HouseInput(
       housePrice: housePrice ?? this.housePrice,
@@ -71,6 +99,7 @@ class HouseInput {
       repaymentType: repaymentType ?? this.repaymentType,
       prepaymentMode: prepaymentMode ?? this.prepaymentMode,
       loanStartYear: loanStartYear ?? this.loanStartYear,
+      prepayments: prepayments ?? this.prepayments,
     );
   }
 }

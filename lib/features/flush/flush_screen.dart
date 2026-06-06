@@ -1,10 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/formatters.dart';
+import '../../core/models.dart';
 import '../../providers/calculator_provider.dart';
 
 class FlushScreen extends ConsumerStatefulWidget {
-  const FlushScreen({super.key});
+  /// 每月公积金额度来源（可注入购房页的 provider）
+  final StateProvider<double>? pfProvider;
+
+  /// 对比结果来源（可注入购房页的 provider）
+  final ProviderListenable<FlushComparisonResult>? resultProvider;
+
+  /// 副标题说明（如「以商业贷为例」）
+  final String? subtitle;
+
+  const FlushScreen({
+    super.key,
+    this.pfProvider,
+    this.resultProvider,
+    this.subtitle,
+  });
 
   @override
   ConsumerState<FlushScreen> createState() => _FlushScreenState();
@@ -13,10 +28,15 @@ class FlushScreen extends ConsumerStatefulWidget {
 class _FlushScreenState extends ConsumerState<FlushScreen> {
   late TextEditingController _pfCtrl;
 
+  StateProvider<double> get _pfProvider =>
+      widget.pfProvider ?? pfAmountProvider;
+  ProviderListenable<FlushComparisonResult> get _resultProvider =>
+      widget.resultProvider ?? flushComparisonProvider;
+
   @override
   void initState() {
     super.initState();
-    final pfAmount = ref.read(pfAmountProvider);
+    final pfAmount = ref.read(_pfProvider);
     _pfCtrl = TextEditingController(text: pfAmount.toStringAsFixed(0));
   }
 
@@ -28,7 +48,7 @@ class _FlushScreenState extends ConsumerState<FlushScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final result = ref.watch(flushComparisonProvider);
+    final result = ref.watch(_resultProvider);
 
     final savedMonths =
         result.monthlyFlushActualMonths - result.annualFlushActualMonths;
@@ -126,7 +146,7 @@ class _FlushScreenState extends ConsumerState<FlushScreen> {
                     onChanged: (v) {
                       final amount = double.tryParse(v);
                       if (amount != null && amount > 0) {
-                        ref.read(pfAmountProvider.notifier).state = amount;
+                        ref.read(_pfProvider.notifier).state = amount;
                       }
                     },
                   ),
@@ -135,9 +155,16 @@ class _FlushScreenState extends ConsumerState<FlushScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              '年冲每次还款额：${formatWan(ref.watch(pfAmountProvider) * 12)}',
+              '年冲每次还款额：${formatWan(ref.watch(_pfProvider) * 12)}',
               style: const TextStyle(fontSize: 12, color: Colors.grey),
             ),
+            if (widget.subtitle != null) ...[
+              const SizedBox(height: 4),
+              Text(
+                widget.subtitle!,
+                style: const TextStyle(fontSize: 12, color: Color(0xFFC8941A)),
+              ),
+            ],
           ],
         ),
       ),

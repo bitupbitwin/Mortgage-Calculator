@@ -207,6 +207,10 @@ CombinedLoanResult simulateCombined(HouseInput input) {
   LoanResult? commercialResult;
 
   if (input.hasPfLoan) {
+    final pfPrepayments = input.prepayments
+        .where((p) => p.pfAmount > 0)
+        .map((p) => Prepayment(atMonth: p.atMonth, amount: p.pfAmount))
+        .toList();
     pfResult = simulate(LoanInput(
       principal: input.effectivePfLoan,
       annualRate: input.pfAnnualRate,
@@ -214,10 +218,15 @@ CombinedLoanResult simulateCombined(HouseInput input) {
       type: input.repaymentType,
       prepaymentMode: input.prepaymentMode,
       loanStartYear: input.loanStartYear,
+      prepayments: pfPrepayments,
     ));
   }
 
   if (input.hasCommercialLoan) {
+    final commercialPrepayments = input.prepayments
+        .where((p) => p.commercialAmount > 0)
+        .map((p) => Prepayment(atMonth: p.atMonth, amount: p.commercialAmount))
+        .toList();
     commercialResult = simulate(LoanInput(
       principal: input.commercialLoanAmount,
       annualRate: input.commercialAnnualRate,
@@ -225,6 +234,7 @@ CombinedLoanResult simulateCombined(HouseInput input) {
       type: input.repaymentType,
       prepaymentMode: input.prepaymentMode,
       loanStartYear: input.loanStartYear,
+      prepayments: commercialPrepayments,
     ));
   }
 
