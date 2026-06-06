@@ -74,10 +74,14 @@ class HousePrepaymentRow extends StatelessWidget {
 
 class AddHousePrepaymentDialog extends StatefulWidget {
   final int loanStartYear;
+  final bool hasPfLoan;
+  final bool hasCommercialLoan;
 
   const AddHousePrepaymentDialog({
     super.key,
     required this.loanStartYear,
+    required this.hasPfLoan,
+    required this.hasCommercialLoan,
   });
 
   @override
@@ -168,35 +172,36 @@ class _AddHousePrepaymentDialogState extends State<AddHousePrepaymentDialog> {
             const Text('提前还款金额（可只填一项）',
                 style: TextStyle(fontSize: 13, color: Colors.grey)),
             const SizedBox(height: 10),
-            TextFormField(
-              controller: _pfController,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
-              decoration: const InputDecoration(
-                labelText: '公积金提前还款',
-                hintText: '0 表示不还',
-                suffixText: '万元',
-                prefixIcon: Icon(Icons.account_balance, size: 18),
+            if (widget.hasPfLoan) ...[
+              TextFormField(
+                controller: _pfController,
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
+                decoration: const InputDecoration(
+                  labelText: '公积金提前还款',
+                  suffixText: '万元',
+                  prefixIcon: Icon(Icons.account_balance, size: 18),
+                ),
+                onChanged: (_) {
+                  if (_error != null) setState(() => _error = null);
+                },
               ),
-              onChanged: (_) {
-                if (_error != null) setState(() => _error = null);
-              },
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _commercialController,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
-              decoration: const InputDecoration(
-                labelText: '商业贷提前还款',
-                hintText: '0 表示不还',
-                suffixText: '万元',
-                prefixIcon: Icon(Icons.business, size: 18),
+              const SizedBox(height: 12),
+            ],
+            if (widget.hasCommercialLoan)
+              TextFormField(
+                controller: _commercialController,
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
+                decoration: const InputDecoration(
+                  labelText: '商业贷提前还款',
+                  suffixText: '万元',
+                  prefixIcon: Icon(Icons.business, size: 18),
+                ),
+                onChanged: (_) {
+                  if (_error != null) setState(() => _error = null);
+                },
               ),
-              onChanged: (_) {
-                if (_error != null) setState(() => _error = null);
-              },
-            ),
             if (_error != null) ...[
               const SizedBox(height: 8),
               Text(_error!,

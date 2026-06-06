@@ -619,6 +619,8 @@ class _HouseScreenState extends ConsumerState<HouseScreen> {
       context: context,
       builder: (_) => AddHousePrepaymentDialog(
         loanStartYear: input.loanStartYear,
+        hasPfLoan: input.hasPfLoan,
+        hasCommercialLoan: input.hasCommercialLoan,
       ),
     );
     if (result != null) {
