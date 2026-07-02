@@ -51,6 +51,27 @@ class _HouseScreenState extends ConsumerState<HouseScreen> {
         text: (s.commercialAnnualRate * 100).toStringAsFixed(4));
     _commercialTermCtrl =
         TextEditingController(text: s.commercialTermMonths.toString());
+
+    // 持久化是异步加载的：完成后把已保存值回填到输入框，
+    // 否则输入框停留在默认值，用户一修改就会把保存值覆盖掉
+    ref.read(houseInputProvider.notifier).loaded.then((_) {
+      if (mounted) _syncControllersFromState();
+    });
+  }
+
+  void _syncControllersFromState() {
+    final s = ref.read(houseInputProvider);
+    _housePriceCtrl.text = (s.housePrice / 10000).toStringAsFixed(0);
+    _downPaymentCtrl.text = (s.downPayment / 10000).toStringAsFixed(0);
+    _agentFeeCtrl.text = (s.agentFeeRate * 100).toStringAsFixed(1);
+    _deedTaxCtrl.text = (s.deedTaxRate * 100).toStringAsFixed(1);
+    _pfLoanCtrl.text = (s.pfLoanAmount / 10000).toStringAsFixed(0);
+    _pfRateCtrl.text = (s.pfAnnualRate * 100).toStringAsFixed(4);
+    _pfTermCtrl.text = s.pfTermMonths.toString();
+    _commercialRateCtrl.text =
+        (s.commercialAnnualRate * 100).toStringAsFixed(4);
+    _commercialTermCtrl.text = s.commercialTermMonths.toString();
+    setState(() {});
   }
 
   @override
@@ -82,9 +103,13 @@ class _HouseScreenState extends ConsumerState<HouseScreen> {
     final cr = (double.tryParse(_commercialRateCtrl.text) ?? 3.95) / 100;
     final ct = int.tryParse(_commercialTermCtrl.text) ?? 360;
 
+    // 清空输入框的瞬间 hp/dp 解析为 0，若直接写入会被持久化；
+    // 传 null 保留旧值，避免应用此刻被杀后重启读到 0
     ref.read(houseInputProvider.notifier).update(
-          housePrice: hp,
-          downPayment: dp,
+          housePrice: hp > 0 ? hp : null,
+          downPayment: dp > 0 || _downPaymentCtrl.text.trim() == '0'
+              ? dp
+              : null,
           agentFeeRate: af,
           deedTaxRate: dt,
           pfLoanAmount: pf,
@@ -98,17 +123,7 @@ class _HouseScreenState extends ConsumerState<HouseScreen> {
 
   void _resetAll() {
     ref.read(houseInputProvider.notifier).reset();
-    final s = ref.read(houseInputProvider);
-    _housePriceCtrl.text = (s.housePrice / 10000).toStringAsFixed(0);
-    _downPaymentCtrl.text = (s.downPayment / 10000).toStringAsFixed(0);
-    _agentFeeCtrl.text = (s.agentFeeRate * 100).toStringAsFixed(1);
-    _deedTaxCtrl.text = (s.deedTaxRate * 100).toStringAsFixed(1);
-    _pfLoanCtrl.text = (s.pfLoanAmount / 10000).toStringAsFixed(0);
-    _pfRateCtrl.text = (s.pfAnnualRate * 100).toStringAsFixed(4);
-    _pfTermCtrl.text = s.pfTermMonths.toString();
-    _commercialRateCtrl.text = (s.commercialAnnualRate * 100).toStringAsFixed(4);
-    _commercialTermCtrl.text = s.commercialTermMonths.toString();
-    setState(() {});
+    _syncControllersFromState();
   }
 
   void _calculate() {
@@ -310,6 +325,8 @@ class _HouseScreenState extends ConsumerState<HouseScreen> {
           validator: (v) {
             final n = double.tryParse(v ?? '');
             if (n == null || n < 0) return '请输入有效首付';
+            final hp = double.tryParse(_housePriceCtrl.text);
+            if (hp != null && hp > 0 && n > hp) return '首付不能超过房价';
             return null;
           },
           onChanged: (_) => _syncToProvider(),
@@ -633,7 +650,7 @@ class _HouseScreenState extends ConsumerState<HouseScreen> {
         hasCommercialLoan: input.hasCommercialLoan,
       ),
     );
-    if (result != null) {
+    if (result != null && mounted) {
       ref.read(houseInputProvider.notifier).addPrepayment(result);
     }
   }
@@ -649,7 +666,7 @@ class _HouseScreenState extends ConsumerState<HouseScreen> {
         initial: current,
       ),
     );
-    if (result != null) {
+    if (result != null && mounted) {
       ref.read(houseInputProvider.notifier).updatePrepayment(index, result);
     }
   }

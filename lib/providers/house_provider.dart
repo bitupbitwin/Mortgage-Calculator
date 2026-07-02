@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/house_models.dart';
@@ -26,12 +28,36 @@ class HouseInputNotifier extends StateNotifier<HouseInput> {
           pfLoanAmount: 2000000,
           prepayments: _defaultPrepayments(),
         )) {
-    _loadSaved();
+    loaded = _loadSaved();
   }
+
+  /// 持久化加载完成信号，UI 可据此回填输入框
+  late final Future<void> loaded;
+
+  /// 加载完成前用户已做过修改时，放弃应用已保存值，避免异步回调覆盖新输入
+  bool _userModified = false;
 
   Future<void> _loadSaved() async {
     try {
       final prefs = await SharedPreferences.getInstance();
+      if (_userModified) return;
+
+      // enum 索引防越界：非法值时传 null，copyWith 保留默认
+      RepaymentType? savedType;
+      final typeIdx = prefs.getInt('h_repaymentType');
+      if (typeIdx != null &&
+          typeIdx >= 0 &&
+          typeIdx < RepaymentType.values.length) {
+        savedType = RepaymentType.values[typeIdx];
+      }
+      PrepaymentMode? savedMode;
+      final modeIdx = prefs.getInt('h_prepaymentMode');
+      if (modeIdx != null &&
+          modeIdx >= 0 &&
+          modeIdx < PrepaymentMode.values.length) {
+        savedMode = PrepaymentMode.values[modeIdx];
+      }
+
       state = state.copyWith(
         housePrice: prefs.getDouble('h_housePrice'),
         downPayment: prefs.getDouble('h_downPayment'),
@@ -42,11 +68,38 @@ class HouseInputNotifier extends StateNotifier<HouseInput> {
         pfTermMonths: prefs.getInt('h_pfTermMonths'),
         commercialAnnualRate: prefs.getDouble('h_commercialRate'),
         commercialTermMonths: prefs.getInt('h_commercialTermMonths'),
-        repaymentType: RepaymentType
-            .values[prefs.getInt('h_repaymentType') ?? 0],
-        prepaymentMode: PrepaymentMode
-            .values[prefs.getInt('h_prepaymentMode') ?? 0],
+        repaymentType: savedType,
+        prepaymentMode: savedMode,
+        prepayments: _decodePrepayments(prefs.getString('h_prepayments')),
       );
+    } catch (_) {}
+  }
+
+  /// prefs 里没存过返回 null（保留默认节点）；存过空列表则尊重用户的清空操作
+  static List<HousePrepayment>? _decodePrepayments(String? json) {
+    if (json == null) return null;
+    try {
+      final list = jsonDecode(json) as List;
+      return list
+          .map((e) => HousePrepayment(
+                atMonth: (e['m'] as num).toInt(),
+                pfAmount: (e['pf'] as num?)?.toDouble() ?? 0,
+                commercialAmount: (e['cm'] as num?)?.toDouble() ?? 0,
+              ))
+          .toList();
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> _savePrepayments() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final json = jsonEncode(state.prepayments
+          .map((p) =>
+              {'m': p.atMonth, 'pf': p.pfAmount, 'cm': p.commercialAmount})
+          .toList());
+      await prefs.setString('h_prepayments', json);
     } catch (_) {}
   }
 
@@ -63,6 +116,7 @@ class HouseInputNotifier extends StateNotifier<HouseInput> {
     RepaymentType? repaymentType,
     PrepaymentMode? prepaymentMode,
   }) async {
+    _userModified = true;
     state = state.copyWith(
       housePrice: housePrice,
       downPayment: downPayment,
@@ -101,29 +155,60 @@ class HouseInputNotifier extends StateNotifier<HouseInput> {
   }
 
   void addPrepayment(HousePrepayment p) {
+    _userModified = true;
     final list = [...state.prepayments, p]
       ..sort((a, b) => a.atMonth.compareTo(b.atMonth));
     state = state.copyWith(prepayments: list);
+    _savePrepayments();
   }
 
   void removePrepayment(int index) {
+    _userModified = true;
     final list = [...state.prepayments]..removeAt(index);
     state = state.copyWith(prepayments: list);
+    _savePrepayments();
   }
 
   void updatePrepayment(int index, HousePrepayment p) {
+    _userModified = true;
     final list = [...state.prepayments]..[index] = p;
     list.sort((a, b) => a.atMonth.compareTo(b.atMonth));
     state = state.copyWith(prepayments: list);
+    _savePrepayments();
   }
 
   void reset() {
+    _userModified = true;
     state = HouseInput(
       housePrice: 4200000,
       downPayment: 2000000,
       pfLoanAmount: 2000000,
       prepayments: _defaultPrepayments(),
     );
+    _clearSaved();
+  }
+
+  /// 重置时同步清除已保存值，否则重启后旧数据会回来
+  Future<void> _clearSaved() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      for (final key in [
+        'h_housePrice',
+        'h_downPayment',
+        'h_agentFeeRate',
+        'h_deedTaxRate',
+        'h_pfLoanAmount',
+        'h_pfAnnualRate',
+        'h_pfTermMonths',
+        'h_commercialRate',
+        'h_commercialTermMonths',
+        'h_repaymentType',
+        'h_prepaymentMode',
+        'h_prepayments',
+      ]) {
+        await prefs.remove(key);
+      }
+    } catch (_) {}
   }
 }
 

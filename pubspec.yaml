@@ -3,7 +3,8 @@ description: 房贷计算器 - 支持公积金/商业贷款、提前还款模拟
 version: 1.0.0+1
 
 environment:
-  sdk: '>=3.0.0 <4.0.0'
+  # 代码使用 Color.withValues 等新 API，需要 Dart 3.6+（Flutter 3.27+）
+  sdk: '>=3.6.0 <4.0.0'
 
 dependencies:
   flutter:

@@ -70,7 +70,17 @@ android {
 
     buildTypes {
         release {
-            // 有正式签名时用 release，否则回退 debug 签名以便本地调试
+            // 有正式签名时用 release，否则回退 debug 签名以便本地调试。
+            // 注意：debug 签名的包只能本地测试，绝不可上架（无法覆盖升级）！
+            if (!keystorePropertiesFile.exists()) {
+                println ''
+                println '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
+                println '!! 警告：未找到 android/key.properties，release 包将使用   !!'
+                println '!! DEBUG 签名 —— 仅供本地测试，禁止上架应用商店！          !!'
+                println '!! 配置方法见 android/key.properties.example               !!'
+                println '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
+                println ''
+            }
             signingConfig keystorePropertiesFile.exists() ? signingConfigs.release : signingConfigs.debug
             minifyEnabled true
             shrinkResources true

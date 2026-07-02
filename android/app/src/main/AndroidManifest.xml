@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- 纯本地应用：release 不申请任何权限。
+         调试所需的 INTERNET 权限在 src/debug/AndroidManifest.xml 中声明 -->
     <application
         android:label="房贷计算器"
         android:name="${applicationName}"
