@@ -108,6 +108,12 @@ class _AddHousePrepaymentDialogState extends State<AddHousePrepaymentDialog> {
 
   bool get _isEdit => widget.initial != null;
 
+  /// 元 → 万元文本；整数万不带小数，非整数保留原值（避免 15.5万 被四舍五入成 16）
+  static String _wanText(double amountYuan) {
+    final wan = amountYuan / 10000;
+    return wan == wan.roundToDouble() ? wan.toStringAsFixed(0) : wan.toString();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -117,11 +123,9 @@ class _AddHousePrepaymentDialogState extends State<AddHousePrepaymentDialog> {
       _selectedYear = widget.loanStartYear + totalMonths ~/ 12;
       _selectedMonth = totalMonths % 12 + 1;
       _pfController = TextEditingController(
-          text: p.pfAmount > 0 ? (p.pfAmount / 10000).toStringAsFixed(0) : '');
+          text: p.pfAmount > 0 ? _wanText(p.pfAmount) : '');
       _commercialController = TextEditingController(
-          text: p.commercialAmount > 0
-              ? (p.commercialAmount / 10000).toStringAsFixed(0)
-              : '');
+          text: p.commercialAmount > 0 ? _wanText(p.commercialAmount) : '');
     } else {
       _selectedYear = widget.loanStartYear + 1;
       _selectedMonth = 12;
@@ -161,7 +165,8 @@ class _AddHousePrepaymentDialogState extends State<AddHousePrepaymentDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final years = List.generate(30, (i) => widget.loanStartYear + 1 + i);
+    // 从贷款起始年开始（第一年年末即可提前还款，atMonth=12 对应起始年）
+    final years = List.generate(30, (i) => widget.loanStartYear + i);
     return AlertDialog(
       title: Text(_isEdit ? '编辑提前还款节点' : '添加提前还款节点',
           style: const TextStyle(
